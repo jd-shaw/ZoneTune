@@ -96,6 +96,26 @@ app/src/main/java/com/shaw/zonetune/
 
 本地收藏保存在 DataStore。
 
+## 发布 APK（GitHub Release）
+
+推送形如 `v*` 的 tag 后，GitHub Actions 会自动构建 debug APK 并创建 Release：
+
+```bash
+# 确保已推送要发布的提交
+git push origin dev
+
+# 打 tag 并推送（示例：v0.1.0）
+git tag v0.1.0
+git push origin v0.1.0
+```
+
+完成后到仓库 **Actions** 看构建，再到 **Releases** 下载  
+`ZoneTune-v0.1.0-debug.apk`。
+
+也可在 Actions 里手动跑 **Release APK** 工作流（只上传 Artifact，不自动建 Release）。
+
+> 当前发布的是 **debug** 包，便于安装试用。正式签名的 release 包后续再配密钥。
+
 ## 许可证说明
 
 参考 biu 的 PolyForm Noncommercial 精神：**仅供学习与个人使用，禁止商业用途**。
