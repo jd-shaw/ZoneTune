@@ -1,17 +1,26 @@
 package com.shaw.zonetune
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.core.content.ContextCompat
 import com.shaw.zonetune.data.api.BiliRepository
 import com.shaw.zonetune.data.model.Track
 import com.shaw.zonetune.ui.components.StudioScaffold
@@ -27,9 +36,13 @@ import com.shaw.zonetune.ui.theme.ZoneTuneTheme
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
+    private val notificationPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { /* no-op */ }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        maybeRequestNotificationPermission()
         setContent {
             ZoneTuneTheme {
                 val scope = rememberCoroutineScope()
@@ -37,6 +50,7 @@ class MainActivity : ComponentActivity() {
                 val repository = remember {
                     BiliRepository(app.biliClient, app.cookieStore)
                 }
+                val pendingCollection by app.pendingCollectionPlay.collectAsState()
 
                 var selectedTab by remember { mutableStateOf(StudioTab.Discover) }
                 var showLogin by remember { mutableStateOf(false) }
@@ -47,6 +61,26 @@ class MainActivity : ComponentActivity() {
                 var loggedIn by remember { mutableStateOf(false) }
                 var userName by remember { mutableStateOf("") }
                 var avatarUrl by remember { mutableStateOf("") }
+
+                pendingCollection?.let { request ->
+                    AlertDialog(
+                        onDismissRequest = app::dismissCollectionPlay,
+                        title = { Text("播放合集") },
+                        text = {
+                            Text("「${request.title}」共 ${request.count} 首，要怎样播放？")
+                        },
+                        confirmButton = {
+                            TextButton(onClick = { app.confirmCollectionPlay(expand = true) }) {
+                                Text("播放全部")
+                            }
+                        },
+                        dismissButton = {
+                            TextButton(onClick = { app.confirmCollectionPlay(expand = false) }) {
+                                Text("只播这一首")
+                            }
+                        },
+                    )
+                }
 
                 fun refreshAccount() {
                     scope.launch {
@@ -73,28 +107,14 @@ class MainActivity : ComponentActivity() {
                 }
 
                 fun playTrack(track: Track) {
-                    scope.launch {
-                        val player = app.playerController
-                        player.setLoading(true)
-                        player.setError(null)
-                        try {
-                            val playable = repository.buildPlayableTrack(track)
-                            player.play(playable)
-                        } catch (e: Exception) {
-                            player.setError(e.message ?: "播放失败")
-                        } finally {
-                            player.setLoading(false)
-                        }
-                    }
+                    app.playTrack(track)
                 }
 
                 fun handleShortcut(shortcut: MineShortcut) {
                     when (shortcut) {
                         MineShortcut.Queue -> showNowPlaying = true
                         MineShortcut.Favorites -> selectedTab = StudioTab.Mine
-                        MineShortcut.Recent -> {
-                            Toast.makeText(this@MainActivity, "最近播放即将上线", Toast.LENGTH_SHORT).show()
-                        }
+                        MineShortcut.Recent -> selectedTab = StudioTab.Mine
                         MineShortcut.Local -> {
                             Toast.makeText(this@MainActivity, "本地音乐即将上线", Toast.LENGTH_SHORT).show()
                         }
@@ -122,7 +142,10 @@ class MainActivity : ComponentActivity() {
                             selectedTab = selectedTab,
                             onTabSelected = { selectedTab = it },
                             miniPlayer = {
-                                MiniPlayerBar(onExpand = { showNowPlaying = true })
+                                MiniPlayerBar(
+                                    onExpand = { showNowPlaying = true },
+                                    onOpenLogin = { showLogin = true },
+                                )
                             },
                         ) {
                             when (selectedTab) {
@@ -184,6 +207,17 @@ class MainActivity : ComponentActivity() {
                     }
                 }
             }
+        }
+    }
+
+    private fun maybeRequestNotificationPermission() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return
+        val granted = ContextCompat.checkSelfPermission(
+            this,
+            Manifest.permission.POST_NOTIFICATIONS,
+        ) == PackageManager.PERMISSION_GRANTED
+        if (!granted) {
+            notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
         }
     }
 }

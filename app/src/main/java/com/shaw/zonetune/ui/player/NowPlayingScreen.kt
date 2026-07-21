@@ -113,14 +113,14 @@ fun NowPlayingScreen(
             playMode = state.playMode,
             onDismiss = { showQueue = false },
             onPlayTrack = { item ->
-                if (item.audioUrl.isNotBlank()) {
-                    player.play(item)
-                }
+                player.playResolved(item)
                 showQueue = false
             },
             onRemoveTrack = { item ->
                 player.removeFromQueue(item.id)
             },
+            onRemoveCollection = player::removeCollection,
+            onClearQueue = player::clearQueue,
         )
     }
 

@@ -34,6 +34,7 @@ import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -41,6 +42,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.shaw.zonetune.ui.components.StudioEmptyState
@@ -73,6 +75,20 @@ fun SearchScreen(
     LaunchedEffect(resultsListState.isScrollInProgress) {
         if (resultsListState.isScrollInProgress) {
             hideKeyboard()
+        }
+    }
+
+    val shouldLoadMore by remember {
+        derivedStateOf {
+            val info = resultsListState.layoutInfo
+            val lastVisible = info.visibleItemsInfo.lastOrNull()?.index ?: 0
+            val total = info.totalItemsCount
+            total > 0 && lastVisible >= total - 3
+        }
+    }
+    LaunchedEffect(shouldLoadMore, ui.canLoadMore, ui.loadingMore, ui.loading) {
+        if (shouldLoadMore && ui.canLoadMore && !ui.loadingMore && !ui.loading) {
+            viewModel.loadMore()
         }
     }
 
@@ -126,6 +142,7 @@ fun SearchScreen(
                 hideKeyboard()
                 viewModel.search()
             },
+            onClear = viewModel::clearQuery,
             modifier = Modifier.padding(horizontal = 20.dp),
         )
 
@@ -198,16 +215,48 @@ fun SearchScreen(
                         contentPadding = PaddingValues(bottom = 12.dp),
                         modifier = Modifier.fillMaxSize(),
                     ) {
-                        itemsIndexed(ui.results, key = { _, track -> track.id }) { index, track ->
+                        itemsIndexed(ui.results, key = { index, track -> "${track.id}#$index" }) { index, track ->
                             TrackListRow(
                                 track = track,
                                 onClick = {
                                     hideKeyboard()
                                     viewModel.play(track)
                                 },
-                                showDivider = index != ui.results.lastIndex,
+                                onAddToQueue = {
+                                    hideKeyboard()
+                                    viewModel.addToQueue(track)
+                                },
+                                showDivider = index != ui.results.lastIndex || ui.canLoadMore || ui.loadingMore,
                                 enterDelayMs = (index * 28).coerceAtMost(220),
                             )
+                        }
+                        if (ui.loadingMore) {
+                            item(key = "loading-more") {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 16.dp),
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    CircularProgressIndicator(
+                                        color = MaterialTheme.colorScheme.primary,
+                                        strokeWidth = 2.dp,
+                                        modifier = Modifier.size(22.dp),
+                                    )
+                                }
+                            }
+                        } else if (!ui.canLoadMore && ui.results.isNotEmpty()) {
+                            item(key = "end") {
+                                Text(
+                                    text = "没有更多了",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 14.dp),
+                                    textAlign = TextAlign.Center,
+                                )
+                            }
                         }
                     }
                 }

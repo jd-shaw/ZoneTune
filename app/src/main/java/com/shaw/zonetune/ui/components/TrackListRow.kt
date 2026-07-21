@@ -12,7 +12,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.PlaylistAdd
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.ripple
@@ -20,7 +24,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier as ComposeModifier
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
@@ -29,11 +33,13 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.shaw.zonetune.data.model.Track
 import com.shaw.zonetune.ui.theme.CoverShape
+import com.shaw.zonetune.util.trackMetaLine
 
 @Composable
 fun TrackListRow(
     track: Track,
     onClick: () -> Unit,
+    onAddToQueue: (() -> Unit)? = null,
     showDivider: Boolean = true,
     enterDelayMs: Int = 0,
 ) {
@@ -43,32 +49,46 @@ fun TrackListRow(
         alpha.animateTo(1f, animationSpec = tween(durationMillis = 280, delayMillis = enterDelayMs))
     }
 
+    val meta = remember(
+        track.artist,
+        track.durationSec,
+        track.playCount,
+        track.episodeCountText,
+    ) {
+        trackMetaLine(
+            artist = track.artist,
+            durationSec = track.durationSec,
+            playCount = track.playCount,
+            episodeCountText = track.episodeCountText,
+        )
+    }
+
     Column(
-        modifier = ComposeModifier
+        modifier = Modifier
             .fillMaxWidth()
             .alpha(alpha.value),
     ) {
         Row(
-            modifier = ComposeModifier
+            modifier = Modifier
                 .fillMaxWidth()
                 .clickable(
                     interactionSource = remember { MutableInteractionSource() },
                     indication = ripple(),
                     onClick = onClick,
                 )
-                .padding(horizontal = 20.dp, vertical = 14.dp),
+                .padding(start = 20.dp, end = if (onAddToQueue != null) 4.dp else 20.dp, top = 14.dp, bottom = 14.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             AsyncImage(
                 model = track.coverUrl,
                 contentDescription = null,
-                modifier = ComposeModifier
+                modifier = Modifier
                     .size(56.dp)
                     .clip(CoverShape),
                 contentScale = ContentScale.Crop,
             )
-            Spacer(modifier = ComposeModifier.width(14.dp))
-            Column(modifier = ComposeModifier.weight(1f)) {
+            Spacer(modifier = Modifier.width(14.dp))
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = track.title,
                     maxLines = 2,
@@ -76,19 +96,30 @@ fun TrackListRow(
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onSurface,
                 )
-                Spacer(modifier = ComposeModifier.height(4.dp))
-                Text(
-                    text = track.artist,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+                if (meta.isNotBlank()) {
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = meta,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+            if (onAddToQueue != null) {
+                IconButton(onClick = onAddToQueue) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Outlined.PlaylistAdd,
+                        contentDescription = "加入队列",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
             }
         }
         if (showDivider) {
             HorizontalDivider(
-                modifier = ComposeModifier.padding(start = 90.dp, end = 20.dp),
+                modifier = Modifier.padding(start = 90.dp, end = 20.dp),
                 thickness = 1.dp,
                 color = MaterialTheme.colorScheme.outline,
             )

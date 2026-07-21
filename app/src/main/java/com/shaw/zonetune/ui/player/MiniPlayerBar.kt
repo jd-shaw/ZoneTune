@@ -37,7 +37,9 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.ripple
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -64,6 +66,7 @@ import kotlinx.coroutines.delay
 @Composable
 fun MiniPlayerBar(
     onExpand: () -> Unit = {},
+    onOpenLogin: () -> Unit = {},
 ) {
     val context = LocalContext.current
     val player = ZoneTuneApp.instance.playerController
@@ -100,16 +103,14 @@ fun MiniPlayerBar(
             playMode = state.playMode,
             onDismiss = { showQueue = false },
             onPlayTrack = { item ->
-                if (item.audioUrl.isNotBlank()) {
-                    player.play(item)
-                } else {
-                    Toast.makeText(context, "该曲目还不能直接切换，请重新点播", Toast.LENGTH_SHORT).show()
-                }
+                player.playResolved(item)
                 showQueue = false
             },
             onRemoveTrack = { item ->
                 player.removeFromQueue(item.id)
             },
+            onRemoveCollection = player::removeCollection,
+            onClearQueue = player::clearQueue,
         )
     }
 
@@ -284,12 +285,30 @@ fun MiniPlayerBar(
             }
 
             if (!state.error.isNullOrBlank()) {
-                Text(
-                    text = state.error ?: "",
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodySmall,
-                    modifier = Modifier.padding(start = 14.dp, end = 14.dp, bottom = 8.dp),
-                )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 14.dp, end = 8.dp, bottom = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    Text(
+                        text = state.error ?: "",
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f),
+                    )
+                    TextButton(onClick = player::retryCurrent) {
+                        Text("重试")
+                    }
+                    if (state.errorNeedsLogin) {
+                        TextButton(onClick = onOpenLogin) {
+                            Text("去登录")
+                        }
+                    }
+                }
             }
         }
     }

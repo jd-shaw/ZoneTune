@@ -8,7 +8,7 @@ import com.shaw.zonetune.data.api.BiliApiException
 import com.shaw.zonetune.data.api.BiliRepository
 import com.shaw.zonetune.data.model.Track
 import com.shaw.zonetune.data.search.SearchHistoryStore
-import com.shaw.zonetune.player.PlayerController
+import com.shaw.zonetune.util.isNetworkAvailable
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -21,6 +21,9 @@ data class SearchUiState(
     val query: String = "",
     val results: List<Track> = emptyList(),
     val loading: Boolean = false,
+    val loadingMore: Boolean = false,
+    val canLoadMore: Boolean = false,
+    val page: Int = 1,
     val error: String? = null,
     val loggedIn: Boolean = false,
     val userName: String = "",
@@ -29,7 +32,6 @@ data class SearchUiState(
 
 class SearchViewModel(
     private val repository: BiliRepository,
-    private val player: PlayerController,
     private val historyStore: SearchHistoryStore,
 ) : ViewModel() {
     private val _ui = MutableStateFlow(SearchUiState())
@@ -49,19 +51,97 @@ class SearchViewModel(
         _ui.update { it.copy(query = value) }
     }
 
+    fun clearQuery() {
+        _ui.update {
+            it.copy(
+                query = "",
+                results = emptyList(),
+                error = null,
+                hasSearched = false,
+                loading = false,
+                loadingMore = false,
+                canLoadMore = false,
+                page = 1,
+            )
+        }
+    }
+
     fun search() {
         val keyword = _ui.value.query.trim()
         if (keyword.isBlank()) return
         viewModelScope.launch {
-            _ui.update { it.copy(loading = true, error = null, hasSearched = true) }
+            if (!ZoneTuneApp.instance.isNetworkAvailable()) {
+                _ui.update {
+                    it.copy(
+                        loading = false,
+                        loadingMore = false,
+                        hasSearched = true,
+                        error = "网络不可用，请检查连接后重试",
+                        results = emptyList(),
+                        canLoadMore = false,
+                    )
+                }
+                return@launch
+            }
+            _ui.update {
+                it.copy(
+                    loading = true,
+                    loadingMore = false,
+                    error = null,
+                    hasSearched = true,
+                    page = 1,
+                    canLoadMore = false,
+                )
+            }
             historyStore.add(keyword)
             try {
-                val list = repository.searchVideos(keyword)
-                _ui.update { it.copy(results = list, loading = false) }
+                val list = repository.searchVideos(keyword, page = 1, pageSize = PageSize)
+                _ui.update {
+                    it.copy(
+                        results = list,
+                        loading = false,
+                        page = 1,
+                        canLoadMore = list.size >= PageSize,
+                    )
+                }
             } catch (e: BiliApiException) {
                 _ui.update { it.copy(loading = false, error = "[${e.code}] ${e.message}") }
             } catch (e: Exception) {
                 _ui.update { it.copy(loading = false, error = e.message ?: "搜索失败") }
+            }
+        }
+    }
+
+    fun loadMore() {
+        val state = _ui.value
+        if (state.loading || state.loadingMore || !state.canLoadMore) return
+        val keyword = state.query.trim()
+        if (keyword.isBlank()) return
+        viewModelScope.launch {
+            if (!ZoneTuneApp.instance.isNetworkAvailable()) {
+                _ui.update { it.copy(error = "网络不可用，请检查连接后重试") }
+                return@launch
+            }
+            val nextPage = state.page + 1
+            _ui.update { it.copy(loadingMore = true, error = null) }
+            try {
+                val list = repository.searchVideos(keyword, page = nextPage, pageSize = PageSize)
+                _ui.update {
+                    it.copy(
+                        results = it.results + list,
+                        loadingMore = false,
+                        page = nextPage,
+                        canLoadMore = list.size >= PageSize,
+                    )
+                }
+            } catch (e: BiliApiException) {
+                _ui.update {
+                    it.copy(loadingMore = false, error = "[${e.code}] ${e.message}")
+                }
+            } catch (e: Exception) {
+                _ui.update {
+                    it.copy(loadingMore = false, error = e.message ?: "加载失败")
+                }
             }
         }
     }
@@ -80,18 +160,11 @@ class SearchViewModel(
     }
 
     fun play(track: Track) {
-        viewModelScope.launch {
-            player.setLoading(true)
-            player.setError(null)
-            try {
-                val playable = repository.buildPlayableTrack(track)
-                player.play(playable)
-            } catch (e: Exception) {
-                player.setError(e.message ?: "播放失败")
-            } finally {
-                player.setLoading(false)
-            }
-        }
+        ZoneTuneApp.instance.playTrack(track)
+    }
+
+    fun addToQueue(track: Track) {
+        ZoneTuneApp.instance.addTrackToQueue(track)
     }
 
     fun refreshLoginState() {
@@ -111,6 +184,8 @@ class SearchViewModel(
     }
 
     companion object {
+        private const val PageSize = 20
+
         fun factory(): ViewModelProvider.Factory = object : ViewModelProvider.Factory {
             @Suppress("UNCHECKED_CAST")
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
@@ -118,7 +193,6 @@ class SearchViewModel(
                 val repo = BiliRepository(app.biliClient, app.cookieStore)
                 return SearchViewModel(
                     repository = repo,
-                    player = app.playerController,
                     historyStore = app.searchHistoryStore,
                 ) as T
             }

@@ -13,11 +13,19 @@ import androidx.media3.datasource.DefaultHttpDataSource
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import com.shaw.zonetune.data.api.BiliClient
+import com.shaw.zonetune.data.cookie.CookieStore
 import com.shaw.zonetune.data.model.Track
+import com.shaw.zonetune.data.playback.PlaybackSession
+import com.shaw.zonetune.data.playback.PlaybackSessionStore
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlin.random.Random
 
 data class PlayerUiState(
@@ -28,6 +36,7 @@ data class PlayerUiState(
     val durationMs: Long = 0,
     val loading: Boolean = false,
     val error: String? = null,
+    val errorNeedsLogin: Boolean = false,
     val playMode: PlayMode = PlayMode.Sequential,
 )
 
@@ -37,21 +46,25 @@ data class PlayerUiState(
  */
 class PlayerController(
     context: Context,
+    private val sessionStore: PlaybackSessionStore,
+    private val cookieStore: CookieStore,
 ) {
     private val appContext = context.applicationContext
     private val mainHandler = Handler(Looper.getMainLooper())
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+
+    /** Resolve blank/expired audio URLs before play. Set from app startup. */
+    var resolveTrack: (suspend (Track) -> Track)? = null
 
     private val dataSourceFactory = DefaultHttpDataSource.Factory()
         .setUserAgent(BiliClient.USER_AGENT)
         .setAllowCrossProtocolRedirects(true)
         .setConnectTimeoutMs(15_000)
         .setReadTimeoutMs(20_000)
-        .setDefaultRequestProperties(
-            mapOf(
-                "Referer" to BiliClient.REFERER,
-                "Origin" to BiliClient.ORIGIN,
-            ),
-        )
+
+    private var resolveRetryForId: String? = null
+    private var resumeTrackId: String? = null
+    private var resumePositionMs: Long = 0
 
     val player: ExoPlayer = ExoPlayer.Builder(appContext)
         .setMediaSourceFactory(DefaultMediaSourceFactory(dataSourceFactory))
@@ -63,17 +76,23 @@ class PlayerController(
             /* handleAudioFocus = */ true,
         )
         .setHandleAudioBecomingNoisy(true)
+        .setWakeMode(C.WAKE_MODE_NETWORK)
         .build()
         .also { exo ->
             exo.addListener(object : Player.Listener {
                 override fun onIsPlayingChanged(isPlaying: Boolean) {
                     _state.update { it.copy(isPlaying = isPlaying) }
+                    if (!isPlaying) persistSession()
                 }
 
                 override fun onPlaybackStateChanged(playbackState: Int) {
                     when (playbackState) {
                         Player.STATE_BUFFERING -> _state.update { it.copy(loading = true) }
-                        Player.STATE_READY -> _state.update { it.copy(loading = false, error = null) }
+                        Player.STATE_READY -> {
+                            resolveRetryForId = null
+                            applyPendingResumeSeek(exo)
+                            _state.update { it.copy(loading = false, error = null, errorNeedsLogin = false) }
+                        }
                         Player.STATE_ENDED -> onTrackEnded()
                         Player.STATE_IDLE -> Unit
                     }
@@ -81,13 +100,15 @@ class PlayerController(
 
                 override fun onPlayerError(error: PlaybackException) {
                     val cause = error.cause?.message ?: error.message ?: "unknown"
-                    _state.update {
-                        it.copy(
-                            loading = false,
-                            isPlaying = false,
-                            error = "播放失败: $cause",
-                        )
+                    val current = _state.value.current
+                    // CDN links expire; refresh once automatically.
+                    if (current != null && resolveRetryForId != current.id) {
+                        resolveRetryForId = current.id
+                        resolveAndStart(current, forceRefresh = true)
+                        return
                     }
+                    resolveRetryForId = null
+                    publishError("播放失败: $cause")
                 }
             })
         }
@@ -95,13 +116,122 @@ class PlayerController(
     private val _state = MutableStateFlow(PlayerUiState())
     val state: StateFlow<PlayerUiState> = _state.asStateFlow()
 
+    init {
+        scope.launch(Dispatchers.IO) {
+            runCatching { restoreSession(sessionStore.load()) }
+        }
+    }
+
+    fun restoreSession(session: PlaybackSession) {
+        val mode = runCatching { PlayMode.valueOf(session.playMode) }.getOrDefault(PlayMode.Sequential)
+        val current = session.queue.firstOrNull { it.id == session.currentId }
+            ?: session.queue.firstOrNull()
+        resumeTrackId = current?.id
+        resumePositionMs = session.positionMs.coerceAtLeast(0)
+        _state.update {
+            it.copy(
+                queue = session.queue,
+                current = current,
+                playMode = mode,
+                isPlaying = false,
+                loading = false,
+                error = null,
+                errorNeedsLogin = false,
+                positionMs = resumePositionMs,
+                durationMs = (current?.durationSec ?: 0) * 1000L,
+            )
+        }
+    }
+
     fun play(track: Track) {
-        if (track.audioUrl.isBlank()) {
-            _state.update { it.copy(error = "缺少音频地址", loading = false) }
+        upsertCurrent(track)
+        scope.launch(Dispatchers.IO) {
+            runCatching { sessionStore.addRecent(track) }
+        }
+        // Always refresh CDN URL — bilibili audio links expire quickly.
+        resolveAndStart(track, forceRefresh = true)
+    }
+
+    /**
+     * Append [queue] onto the current playlist (or set it when empty), then play [start].
+     * Re-adding the same collection replaces that collection's previous block.
+     */
+    fun playQueue(queue: List<Track>, start: Track) {
+        require(queue.isNotEmpty()) { "queue empty" }
+        val collectionId = queue.firstOrNull { it.collectionId.isNotBlank() }?.collectionId.orEmpty()
+        val merged = _state.value.queue.toMutableList()
+        if (collectionId.isNotBlank()) {
+            merged.removeAll { it.collectionId == collectionId }
+        }
+        val existingIds = merged.mapTo(HashSet()) { it.id }
+        queue.forEach { track ->
+            if (track.id in existingIds) {
+                val index = merged.indexOfFirst { it.id == track.id }
+                if (index >= 0) merged[index] = track
+            } else {
+                merged.add(track)
+                existingIds.add(track.id)
+            }
+        }
+        _state.update {
+            it.copy(
+                queue = merged,
+                current = start,
+                loading = true,
+                error = null,
+                durationMs = start.durationSec * 1000L,
+            )
+        }
+        persistSession()
+        scope.launch(Dispatchers.IO) {
+            runCatching { sessionStore.addRecent(start) }
+        }
+        resolveAndStart(start, forceRefresh = true)
+    }
+
+    fun playResolved(track: Track) {
+        resolveAndStart(track, forceRefresh = true)
+    }
+
+    private fun resolveAndStart(track: Track, forceRefresh: Boolean) {
+        if (track.id != resumeTrackId) {
+            resumeTrackId = null
+            resumePositionMs = 0
+        }
+        val resolver = resolveTrack
+        if (resolver == null) {
+            publishError("缺少音频地址")
             return
         }
+        scope.launch {
+            _state.update { it.copy(loading = true, error = null, errorNeedsLogin = false, current = track) }
+            try {
+                val playable = withContext(Dispatchers.IO) {
+                    refreshMediaRequestHeaders()
+                    val seed = if (forceRefresh) track.copy(audioUrl = "") else track
+                    resolver(seed).let { resolved ->
+                        resolved.copy(audioUrl = normalizeStreamUrl(resolved.audioUrl))
+                    }
+                }
+                if (playable.audioUrl.isBlank()) {
+                    publishError("缺少音频地址")
+                    return@launch
+                }
+                upsertCurrent(playable)
+                startPlayer(playable)
+            } catch (e: Exception) {
+                resolveRetryForId = null
+                publishError(e.message ?: "播放失败")
+            }
+        }
+    }
+
+    private fun upsertCurrent(track: Track) {
         val queue = _state.value.queue.toMutableList()
-        if (queue.none { it.id == track.id }) {
+        val index = queue.indexOfFirst { it.id == track.id }
+        if (index >= 0) {
+            queue[index] = track
+        } else {
             queue.add(track)
         }
         _state.update {
@@ -113,28 +243,23 @@ class PlayerController(
                 durationMs = track.durationSec * 1000L,
             )
         }
-        val mediaItem = MediaItem.Builder()
-            .setUri(track.audioUrl)
-            .setMediaId(track.id)
-            .setMediaMetadata(
-                MediaMetadata.Builder()
-                    .setTitle(track.title)
-                    .setArtist(track.artist)
-                    .setArtworkUri(track.coverUrl.takeIf { it.isNotBlank() }?.let { android.net.Uri.parse(it) })
-                    .build(),
-            )
-            .build()
-
-        runOnMain {
-            player.setMediaItem(mediaItem)
-            player.prepare()
-            player.playWhenReady = true
-        }
+        persistSession()
     }
 
     fun toggle() {
+        val current = _state.value.current ?: return
+        val mediaReady = player.mediaItemCount > 0 &&
+            player.currentMediaItem?.mediaId == current.id &&
+            player.playbackState != Player.STATE_IDLE
+        if (!mediaReady) {
+            resolveAndStart(current, forceRefresh = true)
+            return
+        }
         runOnMain {
-            if (player.isPlaying) player.pause() else player.play()
+            if (player.isPlaying) player.pause() else {
+                player.playWhenReady = true
+                player.play()
+            }
         }
     }
 
@@ -144,10 +269,12 @@ class PlayerController(
 
     fun cyclePlayMode() {
         _state.update { it.copy(playMode = it.playMode.next()) }
+        persistSession()
     }
 
     fun setPlayMode(mode: PlayMode) {
         _state.update { it.copy(playMode = mode) }
+        persistSession()
     }
 
     fun addToQueue(track: Track) {
@@ -155,29 +282,61 @@ class PlayerController(
             if (state.queue.any { it.id == track.id }) state
             else state.copy(queue = state.queue + track)
         }
+        persistSession()
     }
 
     fun removeFromQueue(trackId: String) {
+        applyQueueFilter { it.id != trackId }
+    }
+
+    fun removeCollection(collectionId: String) {
+        if (collectionId.isBlank()) return
+        applyQueueFilter { it.collectionId != collectionId }
+    }
+
+    fun clearQueue() {
+        runOnMain {
+            player.stop()
+            player.clearMediaItems()
+        }
+        _state.update {
+            it.copy(
+                queue = emptyList(),
+                current = null,
+                isPlaying = false,
+                positionMs = 0,
+                durationMs = 0,
+                loading = false,
+                error = null,
+            )
+        }
+        persistSession()
+    }
+
+    private fun applyQueueFilter(keep: (Track) -> Boolean) {
+        val previousCurrentId = _state.value.current?.id
         _state.update { state ->
-            val nextQueue = state.queue.filterNot { it.id == trackId }
-            val currentRemoved = state.current?.id == trackId
+            val nextQueue = state.queue.filter(keep)
+            val currentRemoved = state.current?.let { keep(it).not() } == true
             state.copy(
                 queue = nextQueue,
                 current = if (currentRemoved) null else state.current,
             )
         }
-        if (_state.value.current == null) {
+        persistSession()
+        if (_state.value.current == null && previousCurrentId != null) {
             runOnMain {
                 player.stop()
                 player.clearMediaItems()
             }
             val fallback = _state.value.queue.firstOrNull()
             if (fallback != null) {
-                play(fallback)
+                playResolved(fallback)
             } else {
                 _state.update {
                     it.copy(isPlaying = false, positionMs = 0, durationMs = 0, loading = false)
                 }
+                persistSession()
             }
         }
     }
@@ -189,14 +348,15 @@ class PlayerController(
                 current = start ?: it.current,
             )
         }
-        start?.let { play(it) }
+        persistSession()
+        start?.let { playResolved(it) }
     }
 
     fun playNext() {
         val next = pickNextTrack(forward = true) ?: return
         when {
             next.id == _state.value.current?.id && _state.value.playMode == PlayMode.Single -> replayCurrent()
-            else -> play(next)
+            else -> playResolved(next)
         }
     }
 
@@ -207,7 +367,7 @@ class PlayerController(
             return
         }
         val prev = pickNextTrack(forward = false) ?: return
-        play(prev)
+        playResolved(prev)
     }
 
     fun refreshProgress() {
@@ -225,11 +385,115 @@ class PlayerController(
     }
 
     fun setError(message: String?) {
-        _state.update { it.copy(error = message, loading = false) }
+        if (message.isNullOrBlank()) {
+            _state.update { it.copy(error = null, errorNeedsLogin = false, loading = false) }
+        } else {
+            publishError(message)
+        }
+    }
+
+    fun clearError() {
+        _state.update { it.copy(error = null, errorNeedsLogin = false) }
+    }
+
+    fun retryCurrent() {
+        val current = _state.value.current ?: return
+        clearError()
+        resolveAndStart(current, forceRefresh = true)
     }
 
     fun release() {
         runOnMain { player.release() }
+    }
+
+    private fun startPlayer(track: Track) {
+        val mediaItem = MediaItem.Builder()
+            .setUri(track.audioUrl)
+            .setMediaId(track.id)
+            .setMediaMetadata(
+                MediaMetadata.Builder()
+                    .setTitle(track.title)
+                    .setArtist(track.artist)
+                    .setArtworkUri(track.coverUrl.takeIf { it.isNotBlank() }?.let { android.net.Uri.parse(it) })
+                    .build(),
+            )
+            .build()
+
+        runOnMain {
+            player.setMediaItem(mediaItem)
+            player.prepare()
+            player.playWhenReady = true
+            player.play()
+        }
+    }
+
+    /** Must run off the main thread — CookieStore.getBlocking uses runBlocking. */
+    private fun refreshMediaRequestHeaders() {
+        val headers = linkedMapOf(
+            "Referer" to BiliClient.REFERER,
+            "Origin" to BiliClient.ORIGIN,
+        )
+        val cookie = buildList {
+            cookieStore.getBlocking("SESSDATA")?.takeIf { it.isNotBlank() }?.let { add("SESSDATA=$it") }
+            cookieStore.getBlocking("bili_jct")?.takeIf { it.isNotBlank() }?.let { add("bili_jct=$it") }
+            cookieStore.getBlocking("DedeUserID")?.takeIf { it.isNotBlank() }?.let { add("DedeUserID=$it") }
+        }.joinToString("; ")
+        if (cookie.isNotBlank()) {
+            headers["Cookie"] = cookie
+        }
+        dataSourceFactory.setDefaultRequestProperties(headers)
+    }
+
+    private fun normalizeStreamUrl(url: String): String {
+        if (url.isBlank()) return url
+        return if (url.startsWith("http://")) url.replaceFirst("http://", "https://") else url
+    }
+
+    private fun persistSession() {
+        val snapshot = _state.value
+        val positionMs = player.currentPosition.coerceAtLeast(0)
+        scope.launch(Dispatchers.IO) {
+            runCatching {
+                sessionStore.saveSession(
+                    queue = snapshot.queue,
+                    currentId = snapshot.current?.id,
+                    playMode = snapshot.playMode,
+                    positionMs = positionMs,
+                )
+            }
+        }
+    }
+
+    private fun applyPendingResumeSeek(exo: ExoPlayer) {
+        val trackId = resumeTrackId ?: return
+        val position = resumePositionMs
+        if (position <= 0) {
+            resumeTrackId = null
+            return
+        }
+        if (exo.currentMediaItem?.mediaId != trackId) return
+        val duration = exo.duration
+        val target = if (duration > 0) position.coerceAtMost(duration - 1_000) else position
+        if (target > 1_000) {
+            exo.seekTo(target)
+            _state.update { it.copy(positionMs = target) }
+        }
+        resumeTrackId = null
+        resumePositionMs = 0
+    }
+
+    private fun publishError(message: String) {
+        val needsLogin = message.contains("登录") ||
+            message.contains("-403") ||
+            message.contains("v_voucher", ignoreCase = true)
+        _state.update {
+            it.copy(
+                loading = false,
+                isPlaying = false,
+                error = message,
+                errorNeedsLogin = needsLogin,
+            )
+        }
     }
 
     private fun onTrackEnded() {
@@ -237,7 +501,12 @@ class PlayerController(
             PlayMode.Single -> replayCurrent()
             PlayMode.Sequential, PlayMode.Shuffle -> {
                 val next = pickNextTrack(forward = true)
-                if (next != null) play(next)
+                if (next != null && next.id != _state.value.current?.id) {
+                    playResolved(next)
+                } else if (next != null && _state.value.queue.size == 1) {
+                    // single-item sequential: loop that item
+                    playResolved(next)
+                }
             }
         }
     }

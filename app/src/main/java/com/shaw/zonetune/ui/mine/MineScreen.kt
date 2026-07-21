@@ -22,6 +22,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.outlined.QueueMusic
 import androidx.compose.material.icons.outlined.FavoriteBorder
+import androidx.compose.material.icons.outlined.History
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
@@ -57,6 +58,7 @@ fun MineScreen(
     onPlayTrack: (Track) -> Unit,
 ) {
     val favorites by ZoneTuneApp.instance.favoriteStore.favoritesFlow.collectAsState(initial = emptyList())
+    val recent by ZoneTuneApp.instance.playbackSessionStore.recentFlow.collectAsState(initial = emptyList())
     val queueSize = ZoneTuneApp.instance.playerController.state.collectAsState().value.queue.size
 
     LazyColumn(
@@ -110,6 +112,54 @@ fun MineScreen(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Icon(
+                    imageVector = Icons.Outlined.History,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                )
+                Spacer(modifier = Modifier.width(10.dp))
+                Text(
+                    text = "最近播放",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.weight(1f),
+                )
+                Text(
+                    text = "${recent.size} 首",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
+
+        if (recent.isEmpty()) {
+            item {
+                Text(
+                    text = "播过的歌会出现在这里，退出后也会保留",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp),
+                )
+            }
+        } else {
+            itemsIndexed(recent, key = { _, track -> "recent-${track.id}" }) { index, track ->
+                TrackListRow(
+                    track = track,
+                    onClick = { onPlayTrack(track) },
+                    onAddToQueue = { ZoneTuneApp.instance.addTrackToQueue(track) },
+                    showDivider = index != recent.lastIndex,
+                    enterDelayMs = (index * 20).coerceAtMost(160),
+                )
+            }
+        }
+
+        item {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 20.dp, end = 20.dp, top = 20.dp, bottom = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Icon(
                     imageVector = Icons.Outlined.FavoriteBorder,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.primary,
@@ -143,6 +193,7 @@ fun MineScreen(
                 TrackListRow(
                     track = track,
                     onClick = { onPlayTrack(track) },
+                    onAddToQueue = { ZoneTuneApp.instance.addTrackToQueue(track) },
                     showDivider = index != favorites.lastIndex,
                     enterDelayMs = (index * 24).coerceAtMost(180),
                 )

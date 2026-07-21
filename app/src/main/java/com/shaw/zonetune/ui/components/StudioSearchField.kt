@@ -1,9 +1,11 @@
 package com.shaw.zonetune.ui.components
 
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -12,7 +14,8 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier as ComposeModifier
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.ImeAction
@@ -23,8 +26,9 @@ fun StudioSearchField(
     value: String,
     onValueChange: (String) -> Unit,
     onSearch: () -> Unit,
+    onClear: (() -> Unit)? = null,
     placeholder: String = "搜索歌曲 / 音乐",
-    modifier: ComposeModifier = ComposeModifier,
+    modifier: Modifier = Modifier,
 ) {
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
@@ -33,6 +37,14 @@ fun StudioSearchField(
         focusManager.clearFocus(force = true)
         keyboardController?.hide()
         onSearch()
+    }
+
+    fun clear() {
+        if (onClear != null) {
+            onClear()
+        } else {
+            onValueChange("")
+        }
     }
 
     OutlinedTextField(
@@ -50,12 +62,23 @@ fun StudioSearchField(
         shape = SearchFieldShape,
         textStyle = MaterialTheme.typography.bodyLarge,
         trailingIcon = {
-            IconButton(onClick = ::submit) {
-                Icon(
-                    imageVector = Icons.Default.Search,
-                    contentDescription = "搜索",
-                    tint = MaterialTheme.colorScheme.primary,
-                )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                if (value.isNotEmpty()) {
+                    IconButton(onClick = ::clear) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = "清空",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
+                IconButton(onClick = ::submit) {
+                    Icon(
+                        imageVector = Icons.Default.Search,
+                        contentDescription = "搜索",
+                        tint = MaterialTheme.colorScheme.primary,
+                    )
+                }
             }
         },
         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),

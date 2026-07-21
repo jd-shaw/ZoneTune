@@ -76,10 +76,14 @@ fun DiscoverScreen(
     val discoverUi by viewModel.ui.collectAsState()
     val playerState by ZoneTuneApp.instance.playerController.state.collectAsState()
     val favorites by ZoneTuneApp.instance.favoriteStore.favoritesFlow.collectAsState(initial = emptyList())
-    val continueTracks = remember(playerState.queue, favorites) {
-        (playerState.queue + favorites)
-            .distinctBy { it.id }
-            .take(8)
+    val recent by ZoneTuneApp.instance.playbackSessionStore.recentFlow.collectAsState(initial = emptyList())
+    val continueTracks = remember(playerState.current, playerState.queue, recent, favorites) {
+        buildList {
+            playerState.current?.let(::add)
+            addAll(playerState.queue)
+            addAll(recent)
+            addAll(favorites)
+        }.distinctBy { it.id }.take(8)
     }
     val pageScroll = rememberScrollState()
 

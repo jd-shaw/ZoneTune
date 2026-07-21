@@ -46,6 +46,7 @@ class BiliRepository(
 
     /**
      * Music partition hot ranking (rid=3). Returns top [limit] entries.
+     * Requires WBI / web_location — bare requests now return risk-control -352.
      */
     suspend fun getMusicHotTracks(limit: Int = 10): List<Track> {
         val resp: BiliResponse<RankingData> = client.getJson(
@@ -53,8 +54,9 @@ class BiliRepository(
             params = mapOf(
                 "rid" to "3",
                 "type" to "all",
+                "web_location" to "333.934",
             ),
-            useWbi = false,
+            useWbi = true,
         )
         ensureOk(resp, "/x/web-interface/ranking/v2")
         return resp.data?.list.orEmpty()
@@ -109,35 +111,128 @@ class BiliRepository(
             .orEmpty()
         if (audio.isNotBlank()) {
             val durationSec = (data.timelength / 1000).toInt().coerceAtLeast(0)
-            return audio to durationSec
+            return normalizeStreamUrl(audio) to durationSec
         }
 
         val durl = data.durl.firstOrNull()?.url.orEmpty()
         if (durl.isNotBlank()) {
             val durationSec = (data.timelength / 1000).toInt().coerceAtLeast(0)
-            return durl to durationSec
+            return normalizeStreamUrl(durl) to durationSec
         }
 
         throw BiliApiException(-1, "No audio stream available", bvid)
     }
 
+    private fun normalizeStreamUrl(url: String): String =
+        if (url.startsWith("http://")) url.replaceFirst("http://", "https://") else url
+
+    data class PreparedPlayback(
+        val queue: List<Track>,
+        val start: Track,
+    )
+
     suspend fun buildPlayableTrack(item: Track): Track {
-        val detail = if (item.cid <= 0L) getVideoDetail(item.bvid) else null
+        val detail = if (item.cid <= 0L || item.aid <= 0L) getVideoDetail(item.bvid) else null
         val cid = if (item.cid > 0) item.cid else (detail?.cid ?: detail?.pages?.firstOrNull()?.cid ?: 0L)
         val aid = if (item.aid > 0) item.aid else (detail?.aid ?: 0L)
         require(cid > 0) { "cid missing for ${item.bvid}" }
 
         val (audioUrl, durationSec) = resolveAudioUrl(item.bvid, cid, aid)
         return item.copy(
+            id = trackId(item.bvid, cid),
             aid = aid,
             cid = cid,
-            title = detail?.title?.takeIf { it.isNotBlank() } ?: item.title,
-            artist = detail?.owner?.name?.takeIf { it.isNotBlank() } ?: item.artist,
-            coverUrl = normalizePic(detail?.pic ?: item.coverUrl),
-            durationSec = if (durationSec > 0) durationSec else (detail?.duration ?: item.durationSec),
+            title = item.title.ifBlank { detail?.title.orEmpty() },
+            artist = item.artist.ifBlank { detail?.owner?.name.orEmpty() },
+            coverUrl = normalizePic(item.coverUrl.ifBlank { detail?.pic.orEmpty() }),
+            durationSec = if (durationSec > 0) durationSec else (item.durationSec.takeIf { it > 0 } ?: detail?.duration ?: 0),
             audioUrl = audioUrl,
         )
     }
+
+    /**
+     * Expand multi-P / ugc_season collections into a queue, and resolve the start track's audio.
+     */
+    suspend fun preparePlayback(item: Track): PreparedPlayback {
+        val detail = getVideoDetail(item.bvid)
+        val queueSeed = expandDetailToTracks(detail, fallback = item)
+        val startSeed = queueSeed.firstOrNull { seed ->
+            item.cid > 0 && seed.cid == item.cid
+        } ?: queueSeed.firstOrNull { it.bvid == item.bvid } ?: queueSeed.first()
+
+        val playable = buildPlayableTrack(startSeed)
+        val queue = queueSeed.map { seed ->
+            if (seed.id == playable.id) playable else seed
+        }
+        return PreparedPlayback(queue = queue, start = playable)
+    }
+
+    private fun expandDetailToTracks(detail: VideoViewData, fallback: Track): List<Track> {
+        val artist = detail.owner?.name?.takeIf { it.isNotBlank() } ?: fallback.artist
+        val cover = normalizePic(detail.pic.ifBlank { fallback.coverUrl })
+
+        val season = detail.ugcSeason
+        val seasonEpisodes = season
+            ?.sections
+            .orEmpty()
+            .flatMap { it.episodes }
+            .filter { it.bvid.isNotBlank() && it.cid > 0 }
+        if (seasonEpisodes.size > 1) {
+            val collectionId = "season:${season?.id?.takeIf { it > 0 } ?: detail.bvid}"
+            val collectionTitle = season?.title?.takeIf { it.isNotBlank() } ?: detail.title
+            return seasonEpisodes.map { ep ->
+                Track(
+                    id = trackId(ep.bvid, ep.cid),
+                    bvid = ep.bvid,
+                    aid = ep.aid,
+                    cid = ep.cid,
+                    title = ep.title.ifBlank { detail.title },
+                    artist = artist,
+                    coverUrl = cover,
+                    episodeCountText = "共${seasonEpisodes.size}集",
+                    collectionId = collectionId,
+                    collectionTitle = collectionTitle,
+                )
+            }
+        }
+
+        if (detail.pages.size > 1) {
+            val collectionId = "pages:${detail.bvid}"
+            val collectionTitle = detail.title.ifBlank { fallback.title }
+            return detail.pages.map { page ->
+                Track(
+                    id = trackId(detail.bvid, page.cid),
+                    bvid = detail.bvid,
+                    aid = detail.aid,
+                    cid = page.cid,
+                    title = page.part.ifBlank { "${detail.title} P${page.page}" },
+                    artist = artist,
+                    coverUrl = cover,
+                    durationSec = page.duration.coerceAtLeast(0),
+                    episodeCountText = "共${detail.pages.size}P",
+                    collectionId = collectionId,
+                    collectionTitle = collectionTitle,
+                )
+            }
+        }
+
+        val cid = detail.cid.takeIf { it > 0 } ?: detail.pages.firstOrNull()?.cid ?: fallback.cid
+        return listOf(
+            Track(
+                id = trackId(detail.bvid, cid),
+                bvid = detail.bvid,
+                aid = detail.aid,
+                cid = cid,
+                title = detail.title.ifBlank { fallback.title },
+                artist = artist,
+                coverUrl = cover,
+                durationSec = detail.duration.coerceAtLeast(fallback.durationSec),
+            ),
+        )
+    }
+
+    private fun trackId(bvid: String, cid: Long): String =
+        if (cid > 0) "$bvid:$cid" else bvid
 
     suspend fun generateQrCode(): QrGenerateData {
         val resp: BiliResponse<QrGenerateData> = client.getJson(
@@ -193,6 +288,8 @@ class BiliRepository(
             artist = author,
             coverUrl = normalizePic(pic),
             durationSec = parseDuration(duration),
+            playCount = play.coerceAtLeast(0),
+            episodeCountText = episodeCountText.trim(),
         )
     }
 
@@ -206,6 +303,7 @@ class BiliRepository(
             artist = owner?.name.orEmpty(),
             coverUrl = normalizePic(pic),
             durationSec = duration.coerceAtLeast(0),
+            playCount = stat?.view?.coerceAtLeast(0) ?: 0,
         )
     }
 

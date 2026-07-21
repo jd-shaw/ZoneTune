@@ -1,58 +1,87 @@
 package com.shaw.zonetune.player
 
-import android.app.Notification
-import android.app.NotificationChannel
-import android.app.NotificationManager
-import android.app.PendingIntent
-import android.app.Service
 import android.content.Intent
-import android.os.Build
-import android.os.IBinder
-import androidx.core.app.NotificationCompat
-import com.shaw.zonetune.MainActivity
-import com.shaw.zonetune.R
+import androidx.media3.common.ForwardingPlayer
+import androidx.media3.common.Player
+import androidx.media3.common.util.UnstableApi
+import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.session.MediaSession
+import androidx.media3.session.MediaSessionService
 import com.shaw.zonetune.ZoneTuneApp
 
 /**
- * Minimal foreground service so playback can continue in background.
- * MediaStyle controls will be enriched in a later phase.
+ * Media3 session service: notification + lock-screen / headset controls.
+ * Queue next/prev are routed through [PlayerController] (single ExoPlayer item).
  */
-class PlaybackService : Service() {
-    override fun onBind(intent: Intent?): IBinder? = null
+class PlaybackService : MediaSessionService() {
+    private var mediaSession: MediaSession? = null
 
-    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        createChannel()
-        val open = PendingIntent.getActivity(
-            this,
-            0,
-            Intent(this, MainActivity::class.java),
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
-        )
-        val track = ZoneTuneApp.instance.playerController.state.value.current
-        val notification: Notification = NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle(track?.title ?: getString(R.string.app_name))
-            .setContentText(track?.artist ?: "正在播放")
-            .setSmallIcon(R.drawable.ic_launcher_foreground)
-            .setContentIntent(open)
-            .setOngoing(true)
+    @UnstableApi
+    override fun onCreate() {
+        super.onCreate()
+        val controller = ZoneTuneApp.instance.playerController
+        val player = QueueAwarePlayer(controller.player, controller)
+        mediaSession = MediaSession.Builder(this, player).build()
+    }
+
+    override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaSession? =
+        mediaSession
+
+    override fun onTaskRemoved(rootIntent: Intent?) {
+        val player = mediaSession?.player
+        if (player == null || !player.playWhenReady || player.mediaItemCount == 0) {
+            stopSelf()
+        }
+    }
+
+    override fun onDestroy() {
+        mediaSession?.release()
+        mediaSession = null
+        super.onDestroy()
+    }
+}
+
+/** Exposes next/prev even with a single MediaItem so notification buttons work. */
+private class QueueAwarePlayer(
+    player: ExoPlayer,
+    private val controller: PlayerController,
+) : ForwardingPlayer(player) {
+    override fun getAvailableCommands(): Player.Commands =
+        super.getAvailableCommands()
+            .buildUpon()
+            .add(Player.COMMAND_SEEK_TO_NEXT)
+            .add(Player.COMMAND_SEEK_TO_PREVIOUS)
+            .add(Player.COMMAND_SEEK_TO_NEXT_MEDIA_ITEM)
+            .add(Player.COMMAND_SEEK_TO_PREVIOUS_MEDIA_ITEM)
             .build()
-        startForeground(NOTIFICATION_ID, notification)
-        return START_STICKY
+
+    override fun isCommandAvailable(command: @Player.Command Int): Boolean =
+        when (command) {
+            Player.COMMAND_SEEK_TO_NEXT,
+            Player.COMMAND_SEEK_TO_PREVIOUS,
+            Player.COMMAND_SEEK_TO_NEXT_MEDIA_ITEM,
+            Player.COMMAND_SEEK_TO_PREVIOUS_MEDIA_ITEM,
+            -> true
+            else -> super.isCommandAvailable(command)
+        }
+
+    override fun hasNextMediaItem(): Boolean = true
+
+    override fun hasPreviousMediaItem(): Boolean = true
+
+    override fun seekToNext() {
+        controller.playNext()
     }
 
-    private fun createChannel() {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
-        val manager = getSystemService(NotificationManager::class.java)
-        val channel = NotificationChannel(
-            CHANNEL_ID,
-            "听域播放",
-            NotificationManager.IMPORTANCE_LOW,
-        )
-        manager.createNotificationChannel(channel)
+    override fun seekToNextMediaItem() {
+        controller.playNext()
     }
 
-    companion object {
-        const val CHANNEL_ID = "zonetune_playback"
-        const val NOTIFICATION_ID = 1001
+    override fun seekToPrevious() {
+        controller.playPrev()
+    }
+
+    override fun seekToPreviousMediaItem() {
+        controller.playPrev()
     }
 }

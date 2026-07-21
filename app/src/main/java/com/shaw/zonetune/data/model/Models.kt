@@ -28,6 +28,8 @@ data class SearchVideoItem(
     val duration: String = "",
     val play: Long = 0,
     val description: String = "",
+    /** Present for courses / seasons, e.g. "共70课时". */
+    @SerialName("episode_count_text") val episodeCountText: String = "",
 )
 
 @Serializable
@@ -41,6 +43,27 @@ data class VideoViewData(
     val cid: Long = 0,
     val owner: VideoOwner? = null,
     val pages: List<VideoPage> = emptyList(),
+    @SerialName("ugc_season") val ugcSeason: UgcSeason? = null,
+)
+
+@Serializable
+data class UgcSeason(
+    val id: Long = 0,
+    val title: String = "",
+    val sections: List<UgcSeasonSection> = emptyList(),
+)
+
+@Serializable
+data class UgcSeasonSection(
+    val episodes: List<UgcSeasonEpisode> = emptyList(),
+)
+
+@Serializable
+data class UgcSeasonEpisode(
+    val aid: Long = 0,
+    val bvid: String = "",
+    val cid: Long = 0,
+    val title: String = "",
 )
 
 @Serializable
@@ -181,4 +204,10 @@ data class Track(
     val coverUrl: String,
     val durationSec: Int = 0,
     val audioUrl: String = "",
+    val playCount: Long = 0,
+    /** Search/list badge for multi-episode content, e.g. "共12集". */
+    val episodeCountText: String = "",
+    /** Groups multi-P / season items in the queue for bulk remove. */
+    val collectionId: String = "",
+    val collectionTitle: String = "",
 )
