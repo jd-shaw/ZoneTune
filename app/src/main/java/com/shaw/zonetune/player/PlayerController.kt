@@ -12,11 +12,13 @@ import androidx.media3.common.Player
 import androidx.media3.datasource.DefaultHttpDataSource
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
+import androidx.media3.session.MediaSession
 import com.shaw.zonetune.data.api.BiliClient
 import com.shaw.zonetune.data.cookie.CookieStore
 import com.shaw.zonetune.data.model.Track
 import com.shaw.zonetune.data.playback.PlaybackSession
 import com.shaw.zonetune.data.playback.PlaybackSessionStore
+import com.shaw.zonetune.util.isAutomotiveDevice
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -42,7 +44,8 @@ data class PlayerUiState(
 
 /**
  * Foreground playback controller using Media3 ExoPlayer.
- * Audio requests include Bilibili Referer header.
+ * On car (Zeekr), keeps an in-process [MediaSession] for steering-wheel media keys
+ * without starting a phone-style foreground service.
  */
 class PlayerController(
     context: Context,
@@ -52,6 +55,7 @@ class PlayerController(
     private val appContext = context.applicationContext
     private val mainHandler = Handler(Looper.getMainLooper())
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+    private val automotive = appContext.isAutomotiveDevice()
 
     /** Resolve blank/expired audio URLs before play. Set from app startup. */
     var resolveTrack: (suspend (Track) -> Track)? = null
@@ -65,6 +69,7 @@ class PlayerController(
     private var resolveRetryForId: String? = null
     private var resumeTrackId: String? = null
     private var resumePositionMs: Long = 0
+    private var localMediaSession: MediaSession? = null
 
     val player: ExoPlayer = ExoPlayer.Builder(appContext)
         .setMediaSourceFactory(DefaultMediaSourceFactory(dataSourceFactory))
@@ -113,12 +118,30 @@ class PlayerController(
             })
         }
 
+    /** Shared wrapper used by MediaSession (car keys / notification). */
+    val sessionPlayer: QueueAwarePlayer = QueueAwarePlayer(player, this)
+
     private val _state = MutableStateFlow(PlayerUiState())
     val state: StateFlow<PlayerUiState> = _state.asStateFlow()
 
     init {
+        // Car installs (Jetuo / Zeekr): MediaSession in-process for steering keys.
+        // Phone keeps using PlaybackService for notification controls.
+        if (automotive) {
+            ensureLocalMediaSession()
+        }
         scope.launch(Dispatchers.IO) {
             runCatching { restoreSession(sessionStore.load()) }
+        }
+    }
+
+    /** In-process session so Zeekr steering keys can reach us without FGS. */
+    private fun ensureLocalMediaSession() {
+        if (localMediaSession != null) return
+        runCatching {
+            localMediaSession = MediaSession.Builder(appContext, sessionPlayer)
+                .setId("zonetune_local_session")
+                .build()
         }
     }
 
@@ -403,7 +426,44 @@ class PlayerController(
     }
 
     fun release() {
-        runOnMain { player.release() }
+        runOnMain {
+            localMediaSession?.release()
+            localMediaSession = null
+            player.release()
+        }
+    }
+
+    /** Activity / car key events (steering wheel often injects KeyEvent to foreground app). */
+    fun handleMediaKeyCode(keyCode: Int): Boolean {
+        return when (keyCode) {
+            android.view.KeyEvent.KEYCODE_MEDIA_PLAY -> {
+                if (!state.value.isPlaying) toggle()
+                true
+            }
+            android.view.KeyEvent.KEYCODE_MEDIA_PAUSE -> {
+                if (state.value.isPlaying) pause()
+                true
+            }
+            android.view.KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE,
+            android.view.KeyEvent.KEYCODE_HEADSETHOOK,
+            -> {
+                toggle()
+                true
+            }
+            android.view.KeyEvent.KEYCODE_MEDIA_NEXT -> {
+                playNext()
+                true
+            }
+            android.view.KeyEvent.KEYCODE_MEDIA_PREVIOUS -> {
+                playPrev()
+                true
+            }
+            android.view.KeyEvent.KEYCODE_MEDIA_STOP -> {
+                pause()
+                true
+            }
+            else -> false
+        }
     }
 
     private fun startPlayer(track: Track) {

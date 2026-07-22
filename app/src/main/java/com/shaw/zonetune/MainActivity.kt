@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.view.KeyEvent
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -33,6 +34,7 @@ import com.shaw.zonetune.ui.player.MiniPlayerBar
 import com.shaw.zonetune.ui.player.NowPlayingScreen
 import com.shaw.zonetune.ui.search.SearchScreen
 import com.shaw.zonetune.ui.theme.ZoneTuneTheme
+import com.shaw.zonetune.util.isAutomotiveDevice
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
@@ -42,7 +44,9 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        maybeRequestNotificationPermission()
+        if (!isAutomotiveDevice()) {
+            maybeRequestNotificationPermission()
+        }
         setContent {
             ZoneTuneTheme {
                 val scope = rememberCoroutineScope()
@@ -208,6 +212,22 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
+        if (ZoneTuneApp.instance.playerController.handleMediaKeyCode(keyCode)) {
+            return true
+        }
+        return super.onKeyDown(keyCode, event)
+    }
+
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        if (event.action == KeyEvent.ACTION_DOWN &&
+            ZoneTuneApp.instance.playerController.handleMediaKeyCode(event.keyCode)
+        ) {
+            return true
+        }
+        return super.dispatchKeyEvent(event)
     }
 
     private fun maybeRequestNotificationPermission() {

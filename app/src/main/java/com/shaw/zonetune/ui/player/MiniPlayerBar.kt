@@ -55,12 +55,14 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import coil.compose.AsyncImage
 import com.shaw.zonetune.ZoneTuneApp
 import com.shaw.zonetune.player.PlayMode
 import com.shaw.zonetune.player.PlaybackService
 import com.shaw.zonetune.ui.theme.CoverShape
 import com.shaw.zonetune.ui.theme.MiniBarShape
+import com.shaw.zonetune.util.isAutomotiveDevice
 import kotlinx.coroutines.delay
 
 @Composable
@@ -72,6 +74,8 @@ fun MiniPlayerBar(
     val player = ZoneTuneApp.instance.playerController
     val state by player.state.collectAsState()
     var showQueue by remember { mutableStateOf(false) }
+    var serviceStarted by remember { mutableStateOf(false) }
+    val isAutomotive = remember { context.isAutomotiveDevice() }
 
     LaunchedEffect(state.current?.id, state.isPlaying) {
         while (true) {
@@ -80,11 +84,21 @@ fun MiniPlayerBar(
         }
     }
 
-    LaunchedEffect(state.isPlaying, state.current?.id) {
-        if (state.isPlaying && state.current != null) {
-            runCatching {
-                context.startForegroundService(Intent(context, PlaybackService::class.java))
-            }
+    // 车机（如极氪 ZEEKR OS）对 startForegroundService + 通知超时极严，
+    // 几秒内挂不上通知会直接杀进程。车机上改为纯应用内播放，不拉 FGS。
+    LaunchedEffect(state.isPlaying, state.current?.id, isAutomotive) {
+        if (isAutomotive) return@LaunchedEffect
+        if (state.isPlaying && state.current != null && !serviceStarted) {
+            val started = runCatching {
+                ContextCompat.startForegroundService(
+                    context,
+                    Intent(context, PlaybackService::class.java),
+                )
+            }.isSuccess
+            if (started) serviceStarted = true
+        }
+        if (!state.isPlaying && state.current == null) {
+            serviceStarted = false
         }
     }
 
