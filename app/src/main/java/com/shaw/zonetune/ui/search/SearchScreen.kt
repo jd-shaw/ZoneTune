@@ -1,5 +1,6 @@
 package com.shaw.zonetune.ui.search
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -338,8 +339,9 @@ private fun HistoryChip(
 ) {
     Row(
         modifier = Modifier
-            .clip(RoundedCornerShape(10.dp))
-            .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(10.dp))
+            .clip(RoundedCornerShape(999.dp))
+            .background(MaterialTheme.colorScheme.surfaceVariant)
+            .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(999.dp))
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = ripple(),
@@ -351,7 +353,7 @@ private fun HistoryChip(
         Text(
             text = text,
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurface,
+            color = MaterialTheme.colorScheme.primary,
             maxLines = 1,
         )
         IconButton(
@@ -361,7 +363,7 @@ private fun HistoryChip(
             Icon(
                 Icons.Outlined.Close,
                 contentDescription = "删除",
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.55f),
                 modifier = Modifier.size(14.dp),
             )
         }

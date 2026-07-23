@@ -1,0 +1,47 @@
+{
+  "root": {
+    "nodeId": "gen-project-shell",
+    "kind": "project-shell",
+    "pageIds": ["page-discover", "page-search", "page-mine"],
+    "output": "partials/project-shell.html",
+    "sharedRegions": ["bottom-nav", "mini-player-bar"],
+    "privateRegions": [],
+    "mutableSlots": ["activeNavItem", "pageContent"],
+    "status": "planned",
+    "children": [
+      {
+        "nodeId": "gen-page-discover",
+        "kind": "page-leaf",
+        "pageIds": ["page-discover"],
+        "output": "pages/discover.html",
+        "sharedRegions": ["bottom-nav", "mini-player-bar"],
+        "privateRegions": ["discover content"],
+        "mutableSlots": ["activeNavItem"],
+        "status": "planned",
+        "children": []
+      },
+      {
+        "nodeId": "gen-page-search",
+        "kind": "page-leaf",
+        "pageIds": ["page-search"],
+        "output": "pages/search.html",
+        "sharedRegions": ["bottom-nav", "mini-player-bar"],
+        "privateRegions": ["search content"],
+        "mutableSlots": ["activeNavItem"],
+        "status": "planned",
+        "children": []
+      },
+      {
+        "nodeId": "gen-page-mine",
+        "kind": "page-leaf",
+        "pageIds": ["page-mine"],
+        "output": "pages/mine.html",
+        "sharedRegions": ["bottom-nav", "mini-player-bar"],
+        "privateRegions": ["mine content"],
+        "mutableSlots": ["activeNavItem"],
+        "status": "planned",
+        "children": []
+      }
+    ]
+  }
+}

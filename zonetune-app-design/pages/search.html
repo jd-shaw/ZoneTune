@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>搜索 — 听域 ZoneTune</title>
+    <style id="theme-vars">
+:root {
+  /* ── Warm Studio Palette ── */
+  /* Apple Music 克制留白 + 网易云温度感 */
+  --brand-background: #FAFAF8;
+  --brand-surface: #FFFFFF;
+  --brand-ink: #1D1D1F;
+  --brand-mute: #8E8E93;
+  --brand-steel: #E84C3D;
+  --brand-on-steel: #FFFFFF;
+  --brand-line: #F0EDE8;
+  --brand-error: #D63031;
+
+  /* ── Warm Tints ── */
+  --brand-steel-light: #FFF0EE;
+  --brand-steel-mid: #F4A09A;
+  --brand-steel-dark: #C0392B;
+
+  /* ── Semantic State Colors ── */
+  --state-success: #27AE60;
+  --state-warning: #F2994A;
+  --state-error: #D63031;
+  --state-info: #5BA4CF;
+
+  /* ── Typography ── */
+  --font-display: 'Fraunces', 'Noto Serif SC', Georgia, serif;
+  --font-body: 'Figtree', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
+  --text-display: 40px;
+  --text-display-leading: 46px;
+  --text-display-tracking: -0.5px;
+
+  --text-headline: 28px;
+  --text-headline-leading: 34px;
+
+  --text-title-lg: 22px;
+  --text-title-lg-leading: 28px;
+
+  --text-title-md: 16px;
+  --text-title-md-leading: 22px;
+
+  --text-body: 16px;
+  --text-body-leading: 24px;
+
+  --text-body-sm: 14px;
+  --text-body-sm-leading: 20px;
+
+  --text-caption: 12px;
+  --text-caption-leading: 16px;
+
+  --text-label: 11px;
+  --text-label-leading: 14px;
+
+  /* ── Shape System ── */
+  --radius-xs: 6px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-full: 9999px;
+
+  /* ── Spacing ── */
+  --space-unit: 4px;
+
+  /* ── Surface Depth ── */
+  --shadow-sm: 0 1px 3px rgba(29, 29, 31, 0.04);
+  --shadow-md: 0 2px 12px rgba(29, 29, 31, 0.06);
+  --shadow-lg: 0 8px 30px rgba(29, 29, 31, 0.08);
+}
+
+/* Dark Mode */
+.dark {
+  --brand-background: #0D0D0F;
+  --brand-surface: #1C1C1E;
+  --brand-ink: #F5F5F7;
+  --brand-mute: #98989D;
+  --brand-steel: #FF6B5E;
+  --brand-line: #2C2C2E;
+
+  --brand-steel-light: #2D1515;
+  --brand-steel-mid: #FF9B93;
+  --brand-steel-dark: #8B2020;
+}
+
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.1/dist/index.global.js"></script>
+    <script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+    <style type="text/tailwindcss">
+  @theme inline {
+    --color-background: var(--brand-background);
+  }
+  @layer base {
+    body { background: var(--brand-background); color: var(--brand-foreground); }
+    td, th { @apply break-words; word-break: break-all; word-break: auto-phrase; }
+    th { @apply whitespace-nowrap; }
+  }
+    </style>
+    <style>
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      [data-icon] {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        -webkit-mask-size: contain;
+        mask-size: contain;
+        -webkit-mask-repeat: no-repeat;
+        mask-repeat: no-repeat;
+        -webkit-mask-position: center;
+        mask-position: center;
+        background-color: currentColor;
+      }
+    </style>
+</head>
+<body>
+
+<div class="app-shell flex flex-col min-h-screen" style="background:var(--brand-background);color:var(--brand-ink);font-family:var(--font-body);">
+
+  <!-- ═══════════ PAGE CONTENT ═══════════ -->
+  <main class="flex-1 overflow-y-auto" style="padding-bottom:0;">
+
+    <!-- ─── Safe inset wrapper ─── -->
+    <div style="padding:0 20px;">
+
+      <!-- ═══ 1. Page Header ═══ -->
+      <header style="padding-top:20px;padding-bottom:24px;">
+        <h1 style="font-family:var(--font-display);font-size:24px;font-weight:600;color:var(--brand-ink);line-height:1.18;letter-spacing:-0.02em;word-break:keep-all;">搜索</h1>
+        <p style="font-size:var(--text-body-sm,14px);color:var(--brand-mute);line-height:var(--text-body-sm-leading,20px);margin-top:6px;">从关键词开始，进入工作室</p>
+      </header>
+
+      <!-- ═══ 2. Search Field ═══ -->
+      <div
+        class="search-input flex items-center gap-3"
+        style="
+          height:48px;
+          background:var(--brand-surface);
+          border:1px solid var(--brand-line);
+          border-radius:14px;
+          padding:0 14px;
+          transition: border-color 120ms cubic-bezier(.2,.8,.2,1);
+        "
+      >
+        <!-- Search icon -->
+        <svg class="flex-shrink-0" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--brand-mute)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="11" cy="11" r="8"/>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <!-- Input -->
+        <input
+          type="text"
+          placeholder="搜索曲目、艺人、关键词…"
+          style="
+            flex:1;
+            height:100%;
+            border:none;
+            outline:none;
+            background:transparent;
+            font-family:var(--font-body);
+            font-size:var(--text-body-sm,14px);
+            color:var(--brand-ink);
+            line-height:var(--text-body-sm-leading,20px);
+          "
+          aria-label="搜索"
+        />
+        <!-- Clear button (shown when input has content) -->
+        <button
+          class="clear-btn flex-shrink-0 flex items-center justify-center"
+          style="width:24px;height:24px;border:none;background:transparent;cursor:pointer;display:none;"
+          aria-label="清空搜索"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--brand-mute)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- ═══ 3. Search History Section ═══ -->
+      <section style="margin-top:28px;">
+        <!-- Section header -->
+        <div class="flex items-center justify-between" style="margin-bottom:14px;">
+          <h2 style="font-size:var(--text-body-sm,14px);font-weight:600;color:var(--brand-ink);line-height:var(--text-body-sm-leading,20px);">搜索记录</h2>
+          <button
+            class="clear-btn"
+            style="font-size:var(--text-caption,12px);color:var(--brand-steel);background:transparent;border:none;cursor:pointer;line-height:var(--text-caption-leading,16px);"
+            aria-label="清空搜索记录"
+          >清空</button>
+        </div>
+        <!-- Flow-wrap chips -->
+        <div class="flex flex-wrap gap-2">
+          <!-- Chip: 洛天依 -->
+          <button class="history-chip flex items-center gap-1.5" style="height:32px;padding:0 10px;border-radius:10px;border:1px solid var(--brand-line);background:var(--brand-surface);cursor:pointer;white-space:nowrap;">
+            <span style="font-size:var(--text-body-sm,14px);color:var(--brand-steel);line-height:var(--text-body-sm-leading,20px);">洛天依</span>
+            <span class="chip-remove flex items-center justify-center" style="width:16px;height:16px;cursor:pointer;">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--brand-mute)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </span>
+          </button>
+          <!-- Chip: 钢琴即兴 -->
+          <button class="history-chip flex items-center gap-1.5" style="height:32px;padding:0 10px;border-radius:10px;border:1px solid var(--brand-line);background:var(--brand-surface);cursor:pointer;white-space:nowrap;">
+            <span style="font-size:var(--text-body-sm,14px);color:var(--brand-steel);line-height:var(--text-body-sm-leading,20px);">钢琴即兴</span>
+            <span class="chip-remove flex items-center justify-center" style="width:16px;height:16px;cursor:pointer;">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--brand-mute)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </span>
+          </button>
+          <!-- Chip: 现场录音 -->
+          <button class="history-chip flex items-center gap-1.5" style="height:32px;padding:0 10px;border-radius:10px;border:1px solid var(--brand-line);background:var(--brand-surface);cursor:pointer;white-space:nowrap;">
+            <span style="font-size:var(--text-body-sm,14px);color:var(--brand-steel);line-height:var(--text-body-sm-leading,20px);">现场录音</span>
+            <span class="chip-remove flex items-center justify-center" style="width:16px;height:16px;cursor:pointer;">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--brand-mute)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </span>
+          </button>
+          <!-- Chip: 白噪音 -->
+          <button class="history-chip flex items-center gap-1.5" style="height:32px;padding:0 10px;border-radius:10px;border:1px solid var(--brand-line);background:var(--brand-surface);cursor:pointer;white-space:nowrap;">
+            <span style="font-size:var(--text-body-sm,14px);color:var(--brand-steel);line-height:var(--text-body-sm-leading,20px);">白噪音</span>
+            <span class="chip-remove flex items-center justify-center" style="width:16px;height:16px;cursor:pointer;">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--brand-mute)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </span>
+          </button>
+        </div>
+      </section>
+
+      <!-- ═══ 4. Search Results ═══ -->
+      <section style="margin-top:28px;padding-bottom:16px;">
+        <!-- Section header -->
+        <div class="flex items-center justify-between" style="margin-bottom:4px;">
+          <h2 style="font-size:var(--text-body-sm,14px);font-weight:600;color:var(--brand-ink);line-height:var(--text-body-sm-leading,20px);">搜索结果</h2>
+          <span style="font-size:var(--text-caption,12px);color:var(--brand-mute);line-height:var(--text-caption-leading,16px);">6 首</span>
+        </div>
+
+        <!-- Track list -->
+        <div class="flex flex-col">
+
+          <!-- Row 1 -->
+          <a href="now-playing.html" class="track-row flex items-center gap-3" style="padding:12px 0;text-decoration:none;color:inherit;" role="button" aria-label="播放 深海回响">
+            <img src="../assets/album-cover-1.jpg" alt="" class="flex-shrink-0 object-cover" style="width:44px;height:44px;border-radius:var(--radius-sm,8px);" />
+            <div class="flex-1 min-w-0">
+              <p class="truncate" style="font-size:var(--text-body-sm,14px);font-weight:500;color:var(--brand-ink);line-height:var(--text-body-sm-leading,20px);">深海回响</p>
+              <p class="truncate" style="font-size:var(--text-label,11px);color:var(--brand-mute);line-height:var(--text-label-leading,14px);margin-top:2px;">林声</p>
+            </div>
+            <span class="flex-shrink-0" style="font-size:var(--text-caption,12px);color:var(--brand-mute);line-height:var(--text-caption-leading,16px);">4:23</span>
+          </a>
+          <div style="height:1px;background:var(--brand-line);margin-left:57px;"></div>
+
+          <!-- Row 2 -->
+          <a href="now-playing.html" class="track-row flex items-center gap-3" style="padding:12px 0;text-decoration:none;color:inherit;" role="button" aria-label="播放 星尘漫步">
+            <img src="../assets/album-cover-2.jpg" alt="" class="flex-shrink-0 object-cover" style="width:44px;height:44px;border-radius:var(--radius-sm,8px);" />
+            <div class="flex-1 min-w-0">
+              <p class="truncate" style="font-size:var(--text-body-sm,14px);font-weight:500;color:var(--brand-ink);line-height:var(--text-body-sm-leading,20px);">星尘漫步</p>
+              <p class="truncate" style="font-size:var(--text-label,11px);color:var(--brand-mute);line-height:var(--text-label-leading,14px);margin-top:2px;">洛天依</p>
+            </div>
+            <span class="flex-shrink-0" style="font-size:var(--text-caption,12px);color:var(--brand-mute);line-height:var(--text-caption-leading,16px);">3:47</span>
+          </a>
+          <div style="height:1px;background:var(--brand-line);margin-left:57px;"></div>
+
+          <!-- Row 3 -->
+          <a href="now-playing.html" class="track-row flex items-center gap-3" style="padding:12px 0;text-decoration:none;color:inherit;" role="button" aria-label="播放 钢琴即兴 No.7">
+            <img src="../assets/album-cover-3.jpg" alt="" class="flex-shrink-0 object-cover" style="width:44px;height:44px;border-radius:var(--radius-sm,8px);" />
+            <div class="flex-1 min-w-0">
+              <p class="truncate" style="font-size:var(--text-body-sm,14px);font-weight:500;color:var(--brand-ink);line-height:var(--text-body-sm-leading,20px);">钢琴即兴 No.7</p>
+              <p class="truncate" style="font-size:var(--text-label,11px);color:var(--brand-mute);line-height:var(--text-label-leading,14px);margin-top:2px;">陈默</p>
+            </div>
+            <span class="flex-shrink-0" style="font-size:var(--text-caption,12px);color:var(--brand-mute);line-height:var(--text-caption-leading,16px);">5:12</span>
+          </a>
+          <div style="height:1px;background:var(--brand-line);margin-left:57px;"></div>
+
+          <!-- Row 4 -->
+          <a href="now-playing.html" class="track-row flex items-center gap-3" style="padding:12px 0;text-decoration:none;color:inherit;" role="button" aria-label="播放 晚风漫步">
+            <img src="../assets/album-cover-1.jpg" alt="" class="flex-shrink-0 object-cover" style="width:44px;height:44px;border-radius:var(--radius-sm,8px);" />
+            <div class="flex-1 min-w-0">
+              <p class="truncate" style="font-size:var(--text-body-sm,14px);font-weight:500;color:var(--brand-ink);line-height:var(--text-body-sm-leading,20px);">晚风漫步</p>
+              <p class="truncate" style="font-size:var(--text-label,11px);color:var(--brand-mute);line-height:var(--text-label-leading,14px);margin-top:2px;">林声</p>
+            </div>
+            <span class="flex-shrink-0" style="font-size:var(--text-caption,12px);color:var(--brand-mute);line-height:var(--text-caption-leading,16px);">3:58</span>
+          </a>
+          <div style="height:1px;background:var(--brand-line);margin-left:57px;"></div>
+
+          <!-- Row 5 -->
+          <a href="now-playing.html" class="track-row flex items-center gap-3" style="padding:12px 0;text-decoration:none;color:inherit;" role="button" aria-label="播放 城市白噪音">
+            <img src="../assets/album-cover-2.jpg" alt="" class="flex-shrink-0 object-cover" style="width:44px;height:44px;border-radius:var(--radius-sm,8px);" />
+            <div class="flex-1 min-w-0">
+              <p class="truncate" style="font-size:var(--text-body-sm,14px);font-weight:500;color:var(--brand-ink);line-height:var(--text-body-sm-leading,20px);">城市白噪音</p>
+              <p class="truncate" style="font-size:var(--text-label,11px);color:var(--brand-mute);line-height:var(--text-label-leading,14px);margin-top:2px;">声境工作室</p>
+            </div>
+            <span class="flex-shrink-0" style="font-size:var(--text-caption,12px);color:var(--brand-mute);line-height:var(--text-caption-leading,16px);">6:30</span>
+          </a>
+          <div style="height:1px;background:var(--brand-line);margin-left:57px;"></div>
+
+          <!-- Row 6 -->
+          <a href="now-playing.html" class="track-row flex items-center gap-3" style="padding:12px 0;text-decoration:none;color:inherit;" role="button" aria-label="播放 洛天依现场录音集">
+            <img src="../assets/album-cover-3.jpg" alt="" class="flex-shrink-0 object-cover" style="width:44px;height:44px;border-radius:var(--radius-sm,8px);" />
+            <div class="flex-1 min-w-0">
+              <p class="truncate" style="font-size:var(--text-body-sm,14px);font-weight:500;color:var(--brand-ink);line-height:var(--text-body-sm-leading,20px);">洛天依现场录音集</p>
+              <p class="truncate" style="font-size:var(--text-label,11px);color:var(--brand-mute);line-height:var(--text-label-leading,14px);margin-top:2px;">洛天依</p>
+            </div>
+            <span class="flex-shrink-0" style="font-size:var(--text-caption,12px);color:var(--brand-mute);line-height:var(--text-caption-leading,16px);">8:15</span>
+          </a>
+
+        </div><!-- / Track list -->
+      </section>
+
+    </div><!-- / Safe inset wrapper -->
+  </main>
+
+
+  <!-- ═══════════ Mini Player Bar ═══════════ -->
+  <div class="flex-shrink-0" style="background:var(--brand-surface);border-top:1px solid var(--brand-line);">
+    <!-- progress rail -->
+    <div style="height:2px;background:var(--brand-line);">
+      <div style="width:35%;height:100%;background:var(--brand-steel);border-radius:1px;"></div>
+    </div>
+    <!-- clickable row -->
+    <div
+      data-dom-id="mini-expand"
+      class="flex items-center gap-3 px-4 py-2 cursor-pointer select-none"
+    >
+      <!-- album cover -->
+      <img
+        src="../assets/album-cover-1.jpg"
+        alt=""
+        class="flex-shrink-0 object-cover"
+        style="width:40px;height:40px;border-radius:var(--radius-sm,8px);"
+      />
+      <!-- track info -->
+      <div class="flex-1 min-w-0">
+        <p class="truncate" style="font-size:var(--text-body-sm,14px);font-weight:600;color:var(--brand-ink);line-height:var(--text-body-sm-leading,20px);">
+          晚风漫步
+        </p>
+        <p class="truncate" style="font-size:var(--text-caption,12px);color:var(--brand-mute);line-height:var(--text-caption-leading,16px);">
+          林声
+        </p>
+      </div>
+      <!-- transport controls -->
+      <div class="flex items-center gap-2 flex-shrink-0">
+        <button
+          class="flex items-center justify-center"
+          style="width:36px;height:36px;border-radius:var(--radius-full,9999px);background:var(--brand-steel);border:none;"
+          aria-label="播放/暂停"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="white">
+            <rect x="6" y="4" width="4" height="16" rx="1"/>
+            <rect x="14" y="4" width="4" height="16" rx="1"/>
+          </svg>
+        </button>
+        <button
+          class="flex items-center justify-center"
+          style="width:32px;height:32px;border:none;background:transparent;"
+          aria-label="下一首"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="var(--brand-mute)">
+            <path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ═══════════ Bottom Navigation Bar ═══════════ -->
+  <nav
+    class="flex-shrink-0 flex items-center justify-around"
+    style="background:var(--brand-surface);border-top:1px solid var(--brand-line);padding:6px 0 env(safe-area-inset-bottom,8px);"
+  >
+    <!-- 发现 / Discover -->
+    <a
+      href="discover.html"
+      data-dom-id="tab-discover"
+      class="flex flex-col items-center gap-0.5 flex-1 py-1 no-underline"
+      style="text-decoration:none;color:var(--brand-mute);"
+    >
+      <span class="tab-icon" style="width:40px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:var(--radius-md,12px);background:transparent;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
+        </svg>
+      </span>
+      <span class="tab-label" style="font-size:var(--text-label,11px);line-height:var(--text-label-leading,14px);">
+        发现
+      </span>
+    </a>
+
+    <!-- 搜索 / Search (ACTIVE) -->
+    <a
+      href="search.html"
+      data-active="true"
+      data-dom-id="tab-search"
+      class="flex flex-col items-center gap-0.5 flex-1 py-1 no-underline"
+      style="text-decoration:none;color:var(--brand-steel);"
+    >
+      <span class="tab-icon" style="width:40px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:var(--radius-md,12px);background:var(--brand-steel-light);">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+        </svg>
+      </span>
+      <span class="tab-label" style="font-size:var(--text-label,11px);line-height:var(--text-label-leading,14px);">
+        搜索
+      </span>
+    </a>
+
+    <!-- 我的 / Mine -->
+    <a
+      href="mine.html"
+      data-dom-id="tab-mine"
+      class="flex flex-col items-center gap-0.5 flex-1 py-1 no-underline"
+      style="text-decoration:none;color:var(--brand-mute);"
+    >
+      <span class="tab-icon" style="width:40px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:var(--radius-md,12px);background:transparent;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+        </svg>
+      </span>
+      <span class="tab-label" style="font-size:var(--text-label,11px);line-height:var(--text-label-leading,14px);">
+        我的
+      </span>
+    </a>
+  </nav>
+
+</div><!-- / app-shell -->
+
+
+    <style>
+    /* ── Base reset ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; -webkit-text-size-adjust: 100%; }
+    body {
+      font-family: var(--font-body);
+      background: var(--brand-background);
+      color: var(--brand-ink);
+      min-height: 100vh;
+      min-height: 100dvh;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* ── Active tab: 搜索 ── */
+    [data-dom-id="tab-search"]  { color: var(--brand-steel) !important; }
+    [data-dom-id="tab-search"] .tab-icon { background: var(--brand-steel-light) !important; }
+    [data-dom-id="tab-discover"] { color: var(--brand-mute) !important; }
+    [data-dom-id="tab-mine"]    { color: var(--brand-mute) !important; }
+
+    /* ── Search input focus ring ── */
+    .search-input:focus-within {
+      border-color: var(--brand-steel);
+    }
+
+    /* ── History chip press ── */
+    .history-chip {
+      transition: background 120ms cubic-bezier(.2,.8,.2,1), border-color 120ms cubic-bezier(.2,.8,.2,1);
+    }
+    .history-chip:active {
+      background: var(--brand-steel-light);
+      border-color: var(--brand-steel-light);
+    }
+
+    /* ── Track row press ── */
+    .track-row {
+      transition: background 120ms cubic-bezier(.2,.8,.2,1);
+    }
+    .track-row:active {
+      background: var(--brand-steel-light);
+    }
+
+    /* ── Clear button interaction ── */
+    .clear-btn {
+      transition: color 120ms cubic-bezier(.2,.8,.2,1);
+    }
+    .clear-btn:hover { color: var(--brand-ink); }
+    .clear-btn:active { color: var(--brand-steel); }
+
+    /* ── Chip remove button ── */
+    .chip-remove {
+      transition: opacity 120ms cubic-bezier(.2,.8,.2,1);
+    }
+    .chip-remove:active { opacity: 0.6; }
+
+    /* ── Reduced motion ── */
+    @media (prefers-reduced-motion: reduce) {
+      .history-chip, .track-row, .clear-btn, .chip-remove {
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</body>
+</html>

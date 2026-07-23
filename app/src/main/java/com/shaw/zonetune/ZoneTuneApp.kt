@@ -2,6 +2,8 @@ package com.shaw.zonetune
 
 import android.app.Application
 import android.widget.Toast
+import coil.ImageLoader
+import coil.ImageLoaderFactory
 import com.shaw.zonetune.data.api.BiliClient
 import com.shaw.zonetune.data.api.BiliRepository
 import com.shaw.zonetune.data.cookie.CookieStore
@@ -19,6 +21,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import okhttp3.OkHttpClient
+import java.util.concurrent.TimeUnit
 
 data class CollectionPlayRequest(
     val title: String,
@@ -26,7 +30,7 @@ data class CollectionPlayRequest(
     val prepared: BiliRepository.PreparedPlayback,
 )
 
-class ZoneTuneApp : Application() {
+class ZoneTuneApp : Application(), ImageLoaderFactory {
     private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
 
     lateinit var cookieStore: CookieStore
@@ -112,6 +116,25 @@ class ZoneTuneApp : Application() {
     fun addTrackToQueue(track: Track) {
         playerController.addToQueue(track)
         Toast.makeText(this, "已加入队列", Toast.LENGTH_SHORT).show()
+    }
+
+    /** Bilibili CDN covers often 403 without Referer; use for all Coil loads. */
+    override fun newImageLoader(): ImageLoader {
+        val imageHttp = OkHttpClient.Builder()
+            .connectTimeout(15, TimeUnit.SECONDS)
+            .readTimeout(20, TimeUnit.SECONDS)
+            .addInterceptor { chain ->
+                val request = chain.request().newBuilder()
+                    .header("User-Agent", BiliClient.USER_AGENT)
+                    .header("Referer", BiliClient.REFERER)
+                    .build()
+                chain.proceed(request)
+            }
+            .build()
+        return ImageLoader.Builder(this)
+            .okHttpClient(imageHttp)
+            .crossfade(true)
+            .build()
     }
 
     private fun Track.asSingle(): Track = copy(

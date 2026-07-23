@@ -8,7 +8,6 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
@@ -31,7 +30,6 @@ import androidx.compose.material.icons.outlined.Repeat
 import androidx.compose.material.icons.outlined.RepeatOne
 import androidx.compose.material.icons.outlined.Shuffle
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
@@ -138,15 +136,8 @@ fun MiniPlayerBar(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(MiniBarShape)
-                .background(MaterialTheme.colorScheme.surface)
-                .border(
-                    width = 1.dp,
-                    color = MaterialTheme.colorScheme.outline,
-                    shape = MiniBarShape,
-                ),
+                .background(MaterialTheme.colorScheme.surface),
         ) {
-            HorizontalDivider(color = MaterialTheme.colorScheme.outline, thickness = 1.dp)
-
             val progress = if (state.durationMs > 0) {
                 (state.positionMs.toFloat() / state.durationMs.toFloat()).coerceIn(0f, 1f)
             } else {
@@ -158,7 +149,7 @@ fun MiniPlayerBar(
                     .fillMaxWidth()
                     .height(2.dp),
                 color = MaterialTheme.colorScheme.primary,
-                trackColor = MaterialTheme.colorScheme.surfaceVariant,
+                trackColor = MaterialTheme.colorScheme.outline,
             )
 
             Row(
@@ -250,13 +241,15 @@ fun MiniPlayerBar(
                     onClick = player::toggle,
                     modifier = Modifier
                         .size(40.dp)
-                        .scale(playScale),
+                        .scale(playScale)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.primary),
                 ) {
                     Icon(
                         imageVector = if (state.isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
                         contentDescription = "播放/暂停",
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(24.dp),
+                        tint = MaterialTheme.colorScheme.onPrimary,
+                        modifier = Modifier.size(22.dp),
                     )
                 }
                 IconButton(

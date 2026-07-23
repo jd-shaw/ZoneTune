@@ -1,0 +1,170 @@
+{
+  "project": {
+    "name": "听域 ZoneTune 应用设计",
+    "path": "/Users/xiaojindong/develop/appworkspace/cursor/zoneTune/zonetune-app-design",
+    "operation": "create",
+    "deviceType": "mobile",
+    "language": "zh-CN",
+    "dashboardMode": false,
+    "replicationMode": null,
+    "sourceUrl": null,
+    "visualSpecExcerpt": null,
+    "styleDefinitionBrief": "音乐播放器 App，冷静工作室美学，steel-teal 主色调，Fraunces/Figtree/Noto Serif SC 字体系统，柔和圆角，克制的表面层次。",
+    "designRead": "Music player app / Chinese indie music lovers / calm studio restraint / low-medium density / avoid generic music app neon glow",
+    "designDials": {
+      "layoutVariance": 3,
+      "motionIntensity": 2,
+      "visualDensity": 3
+    },
+    "styleContinuityAnchors": {
+      "colorSystem": {
+        "primaryColorRole": "steel-teal #2F6F7E for primary CTA, active nav, workstation card",
+        "brandHuePolicy": "single brand hue; no secondary/accent",
+        "stateColors": "semantic success/warning/error/info tokens"
+      },
+      "shapeSystem": "rounded corners 6-20px, cover images 10px radius",
+      "typographySystem": "Fraunces + Noto Serif SC for display, Figtree for body",
+      "spacingSystem": "4px base unit, generous padding (16-20px horizontal)",
+      "componentLanguage": "border-first cards, surface layering, no heavy shadows",
+      "surfaceAndDepth": "border-first surfaces, shadow alpha <= 0.05 for static",
+      "imageryAndIconography": "material icons outlined style, album cover rounded corners",
+      "interactionTone": "subtle ripple feedback, gentle transitions"
+    },
+    "specsConstraints": null,
+    "sharedProjectShellContract": {
+      "navigationShell": "bottom tab bar with 3 tabs: 发现/搜索/我的, mini player bar above nav",
+      "primaryColorSystem": "steel-teal #2F6F7E single hue",
+      "typographySystem": "Fraunces/Noto Serif SC display, Figtree body",
+      "radiusScale": "6/8/12/16/20px",
+      "surfaceDepthModel": "border-first, static shadow alpha <= 0.05",
+      "ctaStyle": "rounded pill buttons, steel-teal filled primary",
+      "alignmentRules": "left-aligned text blocks, centered tab bar, generous padding"
+    },
+    "generationTree": {
+      "root": {
+        "nodeId": "gen-project-shell",
+        "kind": "project-shell",
+        "pageIds": ["page-discover", "page-search", "page-mine"],
+        "output": "partials/project-shell.html",
+        "sharedRegions": ["bottom-nav", "mini-player-bar"],
+        "privateRegions": [],
+        "mutableSlots": ["activeNavItem", "pageTitle", "pageContent"],
+        "status": "planned",
+        "children": [
+          {
+            "nodeId": "gen-page-discover",
+            "kind": "page-leaf",
+            "pageIds": ["page-discover"],
+            "output": "pages/discover.html",
+            "sharedRegions": ["bottom-nav", "mini-player-bar"],
+            "privateRegions": ["discover content"],
+            "mutableSlots": ["activeNavItem"],
+            "status": "planned",
+            "children": []
+          },
+          {
+            "nodeId": "gen-page-search",
+            "kind": "page-leaf",
+            "pageIds": ["page-search"],
+            "output": "pages/search.html",
+            "sharedRegions": ["bottom-nav", "mini-player-bar"],
+            "privateRegions": ["search content"],
+            "mutableSlots": ["activeNavItem"],
+            "status": "planned",
+            "children": []
+          },
+          {
+            "nodeId": "gen-page-mine",
+            "kind": "page-leaf",
+            "pageIds": ["page-mine"],
+            "output": "pages/mine.html",
+            "sharedRegions": ["bottom-nav", "mini-player-bar"],
+            "privateRegions": ["mine content"],
+            "mutableSlots": ["activeNavItem"],
+            "status": "planned",
+            "children": []
+          }
+        ]
+      }
+    }
+  },
+  "designSource": {
+    "operatingMode": "free-explore",
+    "libraryIdentity": null,
+    "cssFilePath": "/Users/xiaojindong/develop/appworkspace/cursor/zoneTune/zonetune-app-design/colors_and_type.css",
+    "brandPrefix": "brand",
+    "themeMode": "light",
+    "designDecisionSummary": "Steel Resonance palette from ZoneTune source code: cool paper background, graphite ink text, steel-teal accent, Fraunces/Figtree/Noto Serif SC fonts, rounded corner shape system, border-first surface treatment.",
+    "styleConstraints": {
+      "radiusMax": 20,
+      "spacingBase": 4,
+      "fontSizeBody": 16,
+      "fontSizeMin": 11,
+      "controlHeightDefault": 40,
+      "controlHeightLarge": 48
+    }
+  },
+  "pages": [
+    {
+      "nodeId": "page-discover",
+      "slug": "discover",
+      "title": "发现页",
+      "htmlSrc": "pages/discover.html",
+      "pageIndex": 1,
+      "pageType": "showcase",
+      "businessScenario": "Main discovery feed with workstation card, shortcut row, continue listening, and hot waterfall",
+      "visualNorthStar": "Centered studio specimen: workstation hero card with steel-teal gradient, compact waterfall grid, measured spacing",
+      "compositionPattern": "vertical-scroll-feed with hero-card-lead",
+      "continuityAnchors": ["bottom-nav", "mini-player-bar", "brand-steel-accent", "border-first-cards"]
+    },
+    {
+      "nodeId": "page-now-playing",
+      "slug": "now-playing",
+      "title": "正在播放",
+      "htmlSrc": "pages/now-playing.html",
+      "pageIndex": 2,
+      "pageType": "showcase",
+      "businessScenario": "Full-screen now playing with album art, playback controls, progress slider, play mode",
+      "visualNorthStar": "Expansive album art centered on atmospheric field, minimal controls, steel-teal accent only on play button",
+      "compositionPattern": "centered-specimen-on-field",
+      "continuityAnchors": ["brand-steel-accent", "rounded-covers", "studio-typography"]
+    },
+    {
+      "nodeId": "page-search",
+      "slug": "search",
+      "title": "搜索页",
+      "htmlSrc": "pages/search.html",
+      "pageIndex": 3,
+      "pageType": "task-driven",
+      "businessScenario": "Search input with history chips and results list",
+      "visualNorthStar": "Clean search field at top, history chips below, track list with cover thumbnails",
+      "compositionPattern": "input-led-vertical-flow",
+      "continuityAnchors": ["bottom-nav", "mini-player-bar", "brand-steel-accent"]
+    },
+    {
+      "nodeId": "page-mine",
+      "slug": "mine",
+      "title": "我的",
+      "htmlSrc": "pages/mine.html",
+      "pageIndex": 4,
+      "pageType": "information-dense",
+      "businessScenario": "Account card, shortcuts, recent plays, favorites list",
+      "visualNorthStar": "Account card hero with avatar, clean section dividers, track list rows",
+      "compositionPattern": "section-stacked-list",
+      "continuityAnchors": ["bottom-nav", "mini-player-bar", "border-first-cards"]
+    }
+  ],
+  "assets": [],
+  "wiringPlan": [
+    { "sourcePageId": "page-discover", "domId": "tab-search", "targetPageId": "page-search", "hideEdge": false },
+    { "sourcePageId": "page-discover", "domId": "tab-mine", "targetPageId": "page-mine", "hideEdge": false },
+    { "sourcePageId": "page-search", "domId": "tab-discover", "targetPageId": "page-discover", "hideEdge": false },
+    { "sourcePageId": "page-search", "domId": "tab-mine", "targetPageId": "page-mine", "hideEdge": false },
+    { "sourcePageId": "page-mine", "domId": "tab-discover", "targetPageId": "page-discover", "hideEdge": false },
+    { "sourcePageId": "page-mine", "domId": "tab-search", "targetPageId": "page-search", "hideEdge": false },
+    { "sourcePageId": "page-discover", "domId": "mini-expand", "targetPageId": "page-now-playing", "hideEdge": false }
+  ],
+  "hiddenInteractionPlan": [
+    { "sourcePageId": "page-now-playing", "domId": "back-discover", "targetPageId": "page-discover", "hideEdge": true }
+  ]
+}

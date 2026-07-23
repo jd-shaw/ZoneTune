@@ -12,6 +12,6 @@ val StudioShapes = Shapes(
     extraLarge = RoundedCornerShape(20.dp),
 )
 
-val SearchFieldShape = RoundedCornerShape(14.dp)
-val CoverShape = RoundedCornerShape(10.dp)
+val SearchFieldShape = RoundedCornerShape(20.dp)
+val CoverShape = RoundedCornerShape(12.dp)
 val MiniBarShape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)

@@ -126,7 +126,11 @@ fun MineScreen(
                 Text(
                     text = "${recent.size} 首",
                     style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(999.dp))
+                        .background(MaterialTheme.colorScheme.primaryContainer)
+                        .padding(horizontal = 10.dp, vertical = 4.dp),
                 )
             }
         }
@@ -174,7 +178,11 @@ fun MineScreen(
                 Text(
                     text = "${favorites.size} 首",
                     style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(999.dp))
+                        .background(MaterialTheme.colorScheme.primaryContainer)
+                        .padding(horizontal = 10.dp, vertical = 4.dp),
                 )
             }
         }
@@ -257,6 +265,8 @@ private fun AccountCard(
             }
         }
         Spacer(modifier = Modifier.height(16.dp))
+        HorizontalDivider(color = MaterialTheme.colorScheme.outline)
+        Spacer(modifier = Modifier.height(4.dp))
         if (loggedIn) {
             TextButton(onClick = onLogout) {
                 Text(
@@ -290,47 +300,44 @@ private fun MineRow(
     subtitle: String,
     onClick: () -> Unit,
 ) {
-    Column {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = ripple(),
-                    onClick = onClick,
-                )
-                .padding(horizontal = 20.dp, vertical = 16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp)
+            .clip(RoundedCornerShape(16.dp))
+            .background(MaterialTheme.colorScheme.surface)
+            .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(16.dp))
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = ripple(),
+                onClick = onClick,
             )
-            Spacer(modifier = Modifier.width(14.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.titleSmall,
-                    color = MaterialTheme.colorScheme.onSurface,
-                )
-                Spacer(modifier = Modifier.height(2.dp))
-                Text(
-                    text = subtitle,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-            Icon(
-                imageVector = Icons.AutoMirrored.Outlined.KeyboardArrowRight,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            .padding(horizontal = 16.dp, vertical = 16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.primary,
+        )
+        Spacer(modifier = Modifier.width(14.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+            Spacer(modifier = Modifier.height(2.dp))
+            Text(
+                text = subtitle,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
-        HorizontalDivider(
-            modifier = Modifier.padding(start = 56.dp, end = 20.dp),
-            thickness = 1.dp,
-            color = MaterialTheme.colorScheme.outline,
+        Icon(
+            imageVector = Icons.AutoMirrored.Outlined.KeyboardArrowRight,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }
 }

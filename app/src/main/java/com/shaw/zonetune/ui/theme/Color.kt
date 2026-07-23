@@ -2,18 +2,21 @@ package com.shaw.zonetune.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// Studio palette — cool paper walls, graphite ink, steel-teal accent
-val StudioBackground = Color(0xFFF3F4F6)
+// Warm Studio palette — Apple Music 留白 + 网易云温度感
+val StudioBackground = Color(0xFFFAFAF8)
 val StudioSurface = Color(0xFFFFFFFF)
-val StudioInk = Color(0xFF1C1F26)
-val StudioMute = Color(0xFF6B7280)
-val StudioSteel = Color(0xFF2F6F7E)
-val StudioLine = Color(0xFFE5E7EB)
-val StudioError = Color(0xFFB42318)
+val StudioInk = Color(0xFF1D1D1F)
+val StudioMute = Color(0xFF8E8E93)
+val StudioSteel = Color(0xFFE84C3D)
+val StudioSteelLight = Color(0xFFFFF0EE)
+val StudioSteelMid = Color(0xFFF4A09A)
+val StudioLine = Color(0xFFF0EDE8)
+val StudioError = Color(0xFFD63031)
 
-val StudioBackgroundDark = Color(0xFF12151A)
-val StudioSurfaceDark = Color(0xFF1A1E26)
-val StudioInkDark = Color(0xFFE8EAED)
-val StudioMuteDark = Color(0xFF9AA0A6)
-val StudioSteelDark = Color(0xFF5BA3B5)
-val StudioLineDark = Color(0xFF2A303A)
+val StudioBackgroundDark = Color(0xFF0D0D0F)
+val StudioSurfaceDark = Color(0xFF1C1C1E)
+val StudioInkDark = Color(0xFFF5F5F7)
+val StudioMuteDark = Color(0xFF98989D)
+val StudioSteelDark = Color(0xFFFF6B5E)
+val StudioSteelLightDark = Color(0xFF2D1515)
+val StudioLineDark = Color(0xFF2C2C2E)

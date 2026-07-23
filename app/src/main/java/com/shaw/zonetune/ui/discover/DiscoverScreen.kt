@@ -392,17 +392,16 @@ private fun WorkstationCard(
         modifier = modifier
             .fillMaxWidth()
             .height(132.dp)
-            .clip(RoundedCornerShape(14.dp))
+            .clip(RoundedCornerShape(20.dp))
             .background(
                 Brush.horizontalGradient(
                     colors = listOf(
                         StudioSteel,
                         StudioSteel.copy(alpha = 0.92f),
-                        StudioSteel.copy(alpha = 0.78f),
+                        StudioSteel.copy(alpha = 0.82f),
                     ),
                 ),
             )
-            .border(1.dp, StudioSteel.copy(alpha = 0.35f), RoundedCornerShape(14.dp))
             .then(
                 if (clickable) {
                     Modifier.clickable(
@@ -523,8 +522,8 @@ private fun CircleShortcut(
             modifier = Modifier
                 .size(54.dp)
                 .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.primaryContainer)
-                .border(1.dp, MaterialTheme.colorScheme.outline, CircleShape),
+                .background(MaterialTheme.colorScheme.surface)
+                .border(1.5.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.55f), CircleShape),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
@@ -641,9 +640,8 @@ private fun WaterfallCard(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
+            .clip(RoundedCornerShape(16.dp))
             .background(MaterialTheme.colorScheme.surface)
-            .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(12.dp))
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = ripple(),
@@ -656,7 +654,7 @@ private fun WaterfallCard(
             modifier = Modifier
                 .fillMaxWidth()
                 .aspectRatio(aspect)
-                .clip(RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp)),
+                .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)),
             contentScale = ContentScale.Crop,
         )
         Column(modifier = Modifier.padding(horizontal = 10.dp, vertical = 10.dp)) {
@@ -711,8 +709,7 @@ private fun CoverCard(
             contentDescription = null,
             modifier = Modifier
                 .size(80.dp)
-                .clip(CoverShape)
-                .border(1.dp, MaterialTheme.colorScheme.outline, CoverShape),
+                .clip(CoverShape),
             contentScale = ContentScale.Crop,
         )
         Spacer(modifier = Modifier.height(6.dp))

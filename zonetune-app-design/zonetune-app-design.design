@@ -1,0 +1,380 @@
+{
+  "data": [
+    {
+      "id": "page-discover",
+      "title": "发现页",
+      "type": "page",
+      "version": 1,
+      "createdAt": 1753344000000,
+      "canvasData": {
+        "x": 0,
+        "y": 0,
+        "group": 0
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/discover.html",
+        "interactions": [
+          {
+            "domId": "mini-expand",
+            "targetPageId": "page-now-playing",
+            "hideEdge": false
+          },
+          {
+            "domId": "tab-search",
+            "targetPageId": "page-search",
+            "hideEdge": false
+          },
+          {
+            "domId": "tab-mine",
+            "targetPageId": "page-mine",
+            "hideEdge": false
+          }
+        ]
+      }
+    },
+    {
+      "id": "page-now-playing",
+      "title": "正在播放",
+      "type": "page",
+      "version": 1,
+      "createdAt": 1753344000000,
+      "canvasData": {
+        "x": 0,
+        "y": 846,
+        "group": 0
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/now-playing.html",
+        "interactions": [
+          {
+            "domId": "back-discover",
+            "targetPageId": "page-discover",
+            "hideEdge": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "page-search",
+      "title": "搜索页",
+      "type": "page",
+      "version": 1,
+      "createdAt": 1753344000000,
+      "canvasData": {
+        "x": 0,
+        "y": 1436,
+        "group": 0
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/search.html",
+        "interactions": [
+          {
+            "domId": "tab-discover",
+            "targetPageId": "page-discover",
+            "hideEdge": false
+          },
+          {
+            "domId": "tab-mine",
+            "targetPageId": "page-mine",
+            "hideEdge": false
+          },
+          {
+            "domId": "mini-expand",
+            "targetPageId": "page-now-playing",
+            "hideEdge": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "page-mine",
+      "title": "我的",
+      "type": "page",
+      "version": 1,
+      "createdAt": 1753344000000,
+      "canvasData": {
+        "x": 0,
+        "y": 2052,
+        "group": 0
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/mine.html",
+        "interactions": [
+          {
+            "domId": "tab-discover",
+            "targetPageId": "page-discover",
+            "hideEdge": false
+          },
+          {
+            "domId": "tab-search",
+            "targetPageId": "page-search",
+            "hideEdge": false
+          },
+          {
+            "domId": "mini-expand",
+            "targetPageId": "page-now-playing",
+            "hideEdge": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "image-001",
+      "title": "工作室主视觉",
+      "type": "image",
+      "version": 1,
+      "createdAt": 1753344100000,
+      "canvasData": {
+        "x": 0,
+        "y": 2740
+      },
+      "devMetadata": {
+        "imageSrc": "assets/hero-studio.jpg"
+      }
+    },
+    {
+      "id": "image-002",
+      "title": "专辑封面一",
+      "type": "image",
+      "version": 1,
+      "createdAt": 1753344100000,
+      "canvasData": {
+        "x": 420,
+        "y": 2740
+      },
+      "devMetadata": {
+        "imageSrc": "assets/album-cover-1.jpg"
+      }
+    },
+    {
+      "id": "image-003",
+      "title": "专辑封面二",
+      "type": "image",
+      "version": 1,
+      "createdAt": 1753344100000,
+      "canvasData": {
+        "x": 840,
+        "y": 2740
+      },
+      "devMetadata": {
+        "imageSrc": "assets/album-cover-2.jpg"
+      }
+    },
+    {
+      "id": "image-004",
+      "title": "专辑封面三",
+      "type": "image",
+      "version": 1,
+      "createdAt": 1753344100000,
+      "canvasData": {
+        "x": 1260,
+        "y": 2740
+      },
+      "devMetadata": {
+        "imageSrc": "assets/album-cover-3.jpg"
+      }
+    },
+    {
+      "id": "image-005",
+      "title": "Logo Mark (暖红版)",
+      "type": "image",
+      "version": 1,
+      "createdAt": 1753344200000,
+      "canvasData": {
+        "x": 1680,
+        "y": 2740
+      },
+      "devMetadata": {
+        "imageSrc": "assets/logo-mark.jpg"
+      }
+    },
+    {
+      "id": "image-006",
+      "title": "Logo 横版组合",
+      "type": "image",
+      "version": 1,
+      "createdAt": 1753344200000,
+      "canvasData": {
+        "x": 2100,
+        "y": 2740
+      },
+      "devMetadata": {
+        "imageSrc": "assets/logo-horizontal.jpg"
+      }
+    },
+    {
+      "id": "image-007",
+      "title": "Logo Mark (白色自适应版)",
+      "type": "image",
+      "version": 1,
+      "createdAt": 1753344200000,
+      "canvasData": {
+        "x": 2520,
+        "y": 2740
+      },
+      "devMetadata": {
+        "imageSrc": "assets/logo-mark-white.jpg"
+      }
+    },
+    {
+      "id": "image-008",
+      "title": "Logo V2 声场同心环",
+      "type": "image",
+      "version": 1,
+      "createdAt": 1753344300000,
+      "canvasData": {
+        "x": 2940,
+        "y": 2740
+      },
+      "devMetadata": {
+        "imageSrc": "assets/logo-v2-field.jpg"
+      }
+    },
+    {
+      "id": "image-009",
+      "title": "Logo V2 精密调谐",
+      "type": "image",
+      "version": 1,
+      "createdAt": 1753344300000,
+      "canvasData": {
+        "x": 3360,
+        "y": 2740
+      },
+      "devMetadata": {
+        "imageSrc": "assets/logo-v2-tuning.jpg"
+      }
+    },
+    {
+      "id": "image-010",
+      "title": "Logo 琥珀金",
+      "type": "image",
+      "version": 1,
+      "createdAt": 1753344400000,
+      "canvasData": {
+        "x": 3780,
+        "y": 2740
+      },
+      "devMetadata": {
+        "imageSrc": "assets/logo-amber.jpg"
+      }
+    },
+    {
+      "id": "image-011",
+      "title": "Logo 陶土橙",
+      "type": "image",
+      "version": 1,
+      "createdAt": 1753344400000,
+      "canvasData": {
+        "x": 4200,
+        "y": 2740
+      },
+      "devMetadata": {
+        "imageSrc": "assets/logo-terracotta.jpg"
+      }
+    },
+    {
+      "id": "image-012",
+      "title": "Logo 暖青",
+      "type": "image",
+      "version": 1,
+      "createdAt": 1753344400000,
+      "canvasData": {
+        "x": 4620,
+        "y": 2740
+      },
+      "devMetadata": {
+        "imageSrc": "assets/logo-teal-warm.jpg"
+      }
+    },
+    {
+      "id": "image-013",
+      "title": "Logo 夕阳玫瑰",
+      "type": "image",
+      "version": 1,
+      "createdAt": 1753344500000,
+      "canvasData": {
+        "x": 5040,
+        "y": 2740
+      },
+      "devMetadata": {
+        "imageSrc": "assets/logo-sunset-rose.jpg"
+      }
+    },
+    {
+      "id": "image-014",
+      "title": "Logo 夕阳琥珀",
+      "type": "image",
+      "version": 1,
+      "createdAt": 1753344500000,
+      "canvasData": {
+        "x": 5460,
+        "y": 2740
+      },
+      "devMetadata": {
+        "imageSrc": "assets/logo-sunset-amber.jpg"
+      }
+    },
+    {
+      "id": "image-015",
+      "title": "Logo 夕阳暮紫",
+      "type": "image",
+      "version": 1,
+      "createdAt": 1753344500000,
+      "canvasData": {
+        "x": 5880,
+        "y": 2740
+      },
+      "devMetadata": {
+        "imageSrc": "assets/logo-sunset-lavender.jpg"
+      }
+    },
+    {
+      "id": "image-016",
+      "title": "Logo Final Mark (夕阳琥珀)",
+      "type": "image",
+      "version": 1,
+      "createdAt": 1753344600000,
+      "canvasData": {
+        "x": 6300,
+        "y": 2740
+      },
+      "devMetadata": {
+        "imageSrc": "assets/logo-final-mark.jpg"
+      }
+    },
+    {
+      "id": "image-017",
+      "title": "Logo Final 横版组合 (夕阳琥珀)",
+      "type": "image",
+      "version": 1,
+      "createdAt": 1753344600000,
+      "canvasData": {
+        "x": 6720,
+        "y": 2740
+      },
+      "devMetadata": {
+        "imageSrc": "assets/logo-final-horizontal.jpg"
+      }
+    },
+    {
+      "id": "image-018",
+      "title": "Logo Final 自适应版 (夕阳琥珀)",
+      "type": "image",
+      "version": 1,
+      "createdAt": 1753344600000,
+      "canvasData": {
+        "x": 7140,
+        "y": 2740
+      },
+      "devMetadata": {
+        "imageSrc": "assets/logo-final-white.jpg"
+      }
+    }
+  ],
+  "config": {
+    "autoLayout": true,
+    "deviceType": "mobile",
+    "projectName": "听域 ZoneTune 应用设计",
+    "showEdge": false
+  }
+}

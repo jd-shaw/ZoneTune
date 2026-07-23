@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -24,6 +25,7 @@ import androidx.compose.material.icons.filled.SkipNext
 import androidx.compose.material.icons.filled.SkipPrevious
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.KeyboardArrowDown
+import androidx.compose.material.icons.outlined.MusicNote
 import androidx.compose.material.icons.outlined.Repeat
 import androidx.compose.material.icons.outlined.RepeatOne
 import androidx.compose.material.icons.outlined.Shuffle
@@ -46,8 +48,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -58,6 +62,7 @@ import com.shaw.zonetune.ui.components.BrandMark
 import com.shaw.zonetune.ui.components.BrandMarkSize
 import com.shaw.zonetune.ui.theme.CoverShape
 import com.shaw.zonetune.ui.theme.StudioSteel
+import com.shaw.zonetune.util.isAutomotiveDevice
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
@@ -73,6 +78,8 @@ fun NowPlayingScreen(
     val state by player.state.collectAsState()
     val track = state.current
     val scope = rememberCoroutineScope()
+    val context = LocalContext.current
+    val automotiveExtraBottom = if (remember { context.isAutomotiveDevice() }) 88.dp else 12.dp
 
     val favoriteIds by favoriteStore.favoritesFlow
         .map { list -> list.map { it.id }.toSet() }
@@ -143,7 +150,8 @@ fun NowPlayingScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 24.dp),
+                .padding(horizontal = 24.dp)
+                .padding(bottom = automotiveExtraBottom),
         ) {
             Row(
                 modifier = Modifier
@@ -173,8 +181,6 @@ fun NowPlayingScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
-
             if (track == null) {
                 Box(
                     modifier = Modifier
@@ -189,17 +195,42 @@ fun NowPlayingScreen(
                     )
                 }
             } else {
-                AsyncImage(
-                    model = track.coverUrl,
-                    contentDescription = null,
+                // Cover shrinks to leftover height so controls stay above car dock / nav chrome.
+                Box(
                     modifier = Modifier
+                        .weight(1f)
                         .fillMaxWidth()
-                        .aspectRatio(1f)
-                        .clip(CoverShape),
-                    contentScale = ContentScale.Crop,
-                )
-
-                Spacer(modifier = Modifier.height(24.dp))
+                        .padding(vertical = 12.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    if (track.coverUrl.isBlank()) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxHeight()
+                                .aspectRatio(1f)
+                                .clip(CoverShape)
+                                .background(MaterialTheme.colorScheme.surfaceVariant),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Icon(
+                                Icons.Outlined.MusicNote,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.size(64.dp),
+                            )
+                        }
+                    } else {
+                        AsyncImage(
+                            model = track.coverUrl,
+                            contentDescription = null,
+                            modifier = Modifier
+                                .fillMaxHeight()
+                                .aspectRatio(1f)
+                                .clip(CoverShape),
+                            contentScale = ContentScale.Crop,
+                        )
+                    }
+                }
 
                 Text(
                     text = track.title,
@@ -217,7 +248,7 @@ fun NowPlayingScreen(
                     overflow = TextOverflow.Ellipsis,
                 )
 
-                Spacer(modifier = Modifier.height(20.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
                 val displayProgress = if (sliding >= 0f) sliding else sliderPosition
                 Slider(
@@ -259,7 +290,7 @@ fun NowPlayingScreen(
                     )
                 }
 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(4.dp))
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -298,6 +329,12 @@ fun NowPlayingScreen(
                             onClick = player::toggle,
                             modifier = Modifier
                                 .size(72.dp)
+                                .shadow(
+                                    elevation = 16.dp,
+                                    shape = CircleShape,
+                                    ambientColor = StudioSteel.copy(alpha = 0.35f),
+                                    spotColor = StudioSteel.copy(alpha = 0.45f),
+                                )
                                 .clip(CircleShape)
                                 .background(MaterialTheme.colorScheme.primary),
                         ) {
@@ -355,7 +392,7 @@ fun NowPlayingScreen(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
                 Text(
                     text = modeHint ?: "${state.playMode.label} · 队列 ${state.queue.size.coerceAtLeast(1)} 首",
@@ -375,8 +412,6 @@ fun NowPlayingScreen(
                         textAlign = TextAlign.Center,
                     )
                 }
-
-                Spacer(modifier = Modifier.weight(1f))
             }
         }
     }

@@ -7,11 +7,13 @@ import com.shaw.zonetune.ZoneTuneApp
 import com.shaw.zonetune.data.api.BiliApiException
 import com.shaw.zonetune.data.api.BiliRepository
 import com.shaw.zonetune.data.model.Track
+import com.shaw.zonetune.util.isNetworkAvailable
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.net.UnknownHostException
 
 data class DiscoverUiState(
     val hotTracks: List<Track> = emptyList(),
@@ -42,6 +44,15 @@ class DiscoverViewModel(
 
     fun refreshHot() {
         viewModelScope.launch {
+            if (!ZoneTuneApp.instance.isNetworkAvailable()) {
+                _ui.update {
+                    it.copy(
+                        loadingHot = false,
+                        hotError = "网络不可用，请检查连接后重试",
+                    )
+                }
+                return@launch
+            }
             _ui.update {
                 it.copy(
                     loadingHot = true,
@@ -70,7 +81,7 @@ class DiscoverViewModel(
                 _ui.update {
                     it.copy(
                         loadingHot = false,
-                        hotError = e.message ?: "加载失败",
+                        hotError = friendlyNetworkError(e),
                     )
                 }
             }
@@ -96,5 +107,14 @@ class DiscoverViewModel(
                 return DiscoverViewModel(repo) as T
             }
         }
+    }
+}
+
+private fun friendlyNetworkError(e: Exception): String {
+    val cause = generateSequence(e as Throwable?) { it.cause }.firstOrNull { it is UnknownHostException }
+    return when {
+        cause != null || e is UnknownHostException ->
+            "无法解析 bilibili 域名，请检查网络 / DNS 后点重试"
+        else -> e.message ?: "加载失败"
     }
 }

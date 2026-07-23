@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的 — 听域 ZoneTune</title>
+    <style id="theme-vars">
+:root {
+  /* ── Warm Studio Palette ── */
+  /* Apple Music 克制留白 + 网易云温度感 */
+  --brand-background: #FAFAF8;
+  --brand-surface: #FFFFFF;
+  --brand-ink: #1D1D1F;
+  --brand-mute: #8E8E93;
+  --brand-steel: #E84C3D;
+  --brand-on-steel: #FFFFFF;
+  --brand-line: #F0EDE8;
+  --brand-error: #D63031;
+
+  /* ── Warm Tints ── */
+  --brand-steel-light: #FFF0EE;
+  --brand-steel-mid: #F4A09A;
+  --brand-steel-dark: #C0392B;
+
+  /* ── Semantic State Colors ── */
+  --state-success: #27AE60;
+  --state-warning: #F2994A;
+  --state-error: #D63031;
+  --state-info: #5BA4CF;
+
+  /* ── Typography ── */
+  --font-display: 'Fraunces', 'Noto Serif SC', Georgia, serif;
+  --font-body: 'Figtree', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
+  --text-display: 40px;
+  --text-display-leading: 46px;
+  --text-display-tracking: -0.5px;
+
+  --text-headline: 28px;
+  --text-headline-leading: 34px;
+
+  --text-title-lg: 22px;
+  --text-title-lg-leading: 28px;
+
+  --text-title-md: 16px;
+  --text-title-md-leading: 22px;
+
+  --text-body: 16px;
+  --text-body-leading: 24px;
+
+  --text-body-sm: 14px;
+  --text-body-sm-leading: 20px;
+
+  --text-caption: 12px;
+  --text-caption-leading: 16px;
+
+  --text-label: 11px;
+  --text-label-leading: 14px;
+
+  /* ── Shape System ── */
+  --radius-xs: 6px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-full: 9999px;
+
+  /* ── Spacing ── */
+  --space-unit: 4px;
+
+  /* ── Surface Depth ── */
+  --shadow-sm: 0 1px 3px rgba(29, 29, 31, 0.04);
+  --shadow-md: 0 2px 12px rgba(29, 29, 31, 0.06);
+  --shadow-lg: 0 8px 30px rgba(29, 29, 31, 0.08);
+}
+
+/* Dark Mode */
+.dark {
+  --brand-background: #0D0D0F;
+  --brand-surface: #1C1C1E;
+  --brand-ink: #F5F5F7;
+  --brand-mute: #98989D;
+  --brand-steel: #FF6B5E;
+  --brand-line: #2C2C2E;
+
+  --brand-steel-light: #2D1515;
+  --brand-steel-mid: #FF9B93;
+  --brand-steel-dark: #8B2020;
+}
+
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.1/dist/index.global.js"></script>
+    <script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+    <style type="text/tailwindcss">
+  @theme inline {
+    --color-background: var(--brand-background);
+  }
+  @layer base {
+    body { background: var(--brand-background); color: var(--brand-foreground); }
+    td, th { @apply break-words; word-break: break-all; word-break: auto-phrase; }
+    th { @apply whitespace-nowrap; }
+  }
+    </style>
+    <style>
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      [data-icon] {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        -webkit-mask-size: contain;
+        mask-size: contain;
+        -webkit-mask-repeat: no-repeat;
+        mask-repeat: no-repeat;
+        -webkit-mask-position: center;
+        mask-position: center;
+        background-color: currentColor;
+      }
+    </style>
+</head>
+<body>
+
+<div class="app-shell flex flex-col min-h-screen" style="background:var(--brand-background);color:var(--brand-ink);font-family:var(--font-body);">
+
+  <!-- ======= PAGE CONTENT ======= -->
+  <main class="flex-1 overflow-y-auto" style="padding-bottom:0;">
+
+    <!-- Safe inset wrapper -->
+    <div style="padding:0 16px;">
+
+      <!-- ===== 1. Header ===== -->
+      <header style="padding-top:16px;padding-bottom:20px;">
+        <h1 style="font-family:var(--font-display);font-size:24px;font-weight:600;line-height:1.3;color:var(--brand-ink);">
+          我的
+        </h1>
+        <p style="font-size:var(--text-body-sm,14px);color:var(--brand-mute);line-height:var(--text-body-sm-leading,20px);margin-top:4px;">
+          账号与收藏，都在这一间工作室
+        </p>
+      </header>
+
+
+      <!-- ===== 2. Account Card ===== -->
+      <div
+        style="
+          background:var(--brand-surface);
+          border-radius:var(--radius-lg,16px);
+          border:1px solid var(--brand-line);
+          padding:20px;
+          box-shadow:var(--shadow-sm);
+        "
+      >
+        <div class="flex items-center gap-4">
+          <!-- Avatar -->
+          <div
+            style="
+              width:56px;
+              height:56px;
+              border-radius:var(--radius-full,9999px);
+              background:linear-gradient(135deg, var(--brand-steel-light) 0%, var(--brand-steel) 100%);
+              border:1px solid var(--brand-line);
+              flex-shrink:0;
+              display:flex;
+              align-items:center;
+              justify-content:center;
+            "
+            aria-hidden="true"
+          >
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="rgba(255,255,255,0.85)">
+              <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+            </svg>
+          </div>
+          <!-- User info -->
+          <div class="flex-1 min-w-0">
+            <p style="font-size:var(--text-title-md,16px);font-weight:600;color:var(--brand-ink);line-height:var(--text-title-md-leading,22px);">
+              工作室用户
+            </p>
+            <p style="font-size:var(--text-body-sm,14px);color:var(--brand-mute);line-height:var(--text-body-sm-leading,20px);margin-top:2px;">
+              工作室会话已连接
+            </p>
+          </div>
+        </div>
+        <!-- Logout -->
+        <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--brand-line);">
+          <button
+            style="
+              background:none;
+              border:none;
+              cursor:pointer;
+              font-family:var(--font-body);
+              font-size:var(--text-body-sm,14px);
+              font-weight:500;
+              color:var(--brand-error);
+              line-height:var(--text-body-sm-leading,20px);
+              padding:0;
+              text-align:left;
+            "
+            aria-label="退出登录"
+          >
+            退出登录
+          </button>
+        </div>
+      </div>
+
+
+      <!-- ===== 3. Shortcut Row: 播放队列 ===== -->
+      <div style="margin-top:12px;">
+        <a
+          class="shortcut-row flex items-center gap-3"
+          href="#"
+          style="
+            display:flex;
+            align-items:center;
+            gap:12px;
+            padding:14px 16px;
+            background:var(--brand-surface);
+            border-radius:var(--radius-lg,16px);
+            border:1px solid var(--brand-line);
+            box-shadow:var(--shadow-sm);
+            text-decoration:none;
+            color:inherit;
+            cursor:pointer;
+          "
+          aria-label="播放队列"
+        >
+          <!-- Queue icon -->
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="var(--brand-steel)" style="flex-shrink:0;">
+            <path d="M15 6H3v2h12V6zm0 4H3v2h12v-2zM3 16h8v-2H3v2zM17 6v8.18c-.31-.11-.65-.18-1-.18-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3V8h3V6h-5z"/>
+          </svg>
+          <div class="flex-1 min-w-0">
+            <p style="font-size:var(--text-title-md,16px);font-weight:600;color:var(--brand-ink);line-height:var(--text-title-md-leading,22px);">
+              播放队列
+            </p>
+            <p style="font-size:var(--text-body-sm,14px);color:var(--brand-mute);line-height:var(--text-body-sm-leading,20px);">
+              当前 3 首
+            </p>
+          </div>
+          <!-- Chevron right -->
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="var(--brand-mute)" style="flex-shrink:0;">
+            <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6-6-6z"/>
+          </svg>
+        </a>
+      </div>
+
+
+      <!-- ===== 4. Section: 最近播放 ===== -->
+      <div style="margin-top:24px;">
+        <!-- Section header -->
+        <div class="flex items-center gap-2" style="margin-bottom:12px;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="var(--brand-steel)" style="flex-shrink:0;">
+            <path d="M13 3a9 9 0 00-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42A8.954 8.954 0 0013 21a9 9 0 000-18zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"/>
+          </svg>
+          <span style="font-size:var(--text-title-md,16px);font-weight:600;color:var(--brand-ink);line-height:var(--text-title-md-leading,22px);flex:1;">
+            最近播放
+          </span>
+          <span style="font-size:var(--text-caption,12px);font-weight:500;color:var(--brand-steel);line-height:var(--text-caption-leading,16px);background:var(--brand-steel-light);padding:2px 8px;border-radius:var(--radius-full,9999px);">
+            4 首
+          </span>
+        </div>
+
+        <!-- Track list card -->
+        <div style="background:var(--brand-surface);border-radius:var(--radius-lg,16px);border:1px solid var(--brand-line);box-shadow:var(--shadow-sm);overflow:hidden;">
+
+          <!-- Track 1 -->
+          <a href="#" class="track-row flex items-center gap-3" style="display:flex;align-items:center;gap:12px;padding:12px 16px;text-decoration:none;color:inherit;">
+            <img src="../assets/album-cover-1.jpg" alt="" style="width:44px;height:44px;border-radius:var(--radius-sm,8px);object-fit:cover;flex-shrink:0;" />
+            <div class="flex-1 min-w-0">
+              <p class="truncate" style="font-size:var(--text-body-sm,14px);font-weight:500;color:var(--brand-ink);line-height:var(--text-body-sm-leading,20px);">
+                晚风漫步
+              </p>
+              <p class="truncate" style="font-size:var(--text-caption,12px);color:var(--brand-mute);line-height:var(--text-caption-leading,16px);">
+                林声
+              </p>
+            </div>
+            <span style="font-size:var(--text-caption,12px);color:var(--brand-mute);line-height:var(--text-caption-leading,16px);flex-shrink:0;">4:32</span>
+          </a>
+
+          <!-- Divider -->
+          <div style="height:1px;background:var(--brand-line);margin:0 16px;"></div>
+
+          <!-- Track 2 -->
+          <a href="#" class="track-row flex items-center gap-3" style="display:flex;align-items:center;gap:12px;padding:12px 16px;text-decoration:none;color:inherit;">
+            <img src="../assets/album-cover-2.jpg" alt="" style="width:44px;height:44px;border-radius:var(--radius-sm,8px);object-fit:cover;flex-shrink:0;" />
+            <div class="flex-1 min-w-0">
+              <p class="truncate" style="font-size:var(--text-body-sm,14px);font-weight:500;color:var(--brand-ink);line-height:var(--text-body-sm-leading,20px);">
+                深海回响
+              </p>
+              <p class="truncate" style="font-size:var(--text-caption,12px);color:var(--brand-mute);line-height:var(--text-caption-leading,16px);">
+                潮汐工作室
+              </p>
+            </div>
+            <span style="font-size:var(--text-caption,12px);color:var(--brand-mute);line-height:var(--text-caption-leading,16px);flex-shrink:0;">5:17</span>
+          </a>
+
+          <!-- Divider -->
+          <div style="height:1px;background:var(--brand-line);margin:0 16px;"></div>
+
+          <!-- Track 3 -->
+          <a href="#" class="track-row flex items-center gap-3" style="display:flex;align-items:center;gap:12px;padding:12px 16px;text-decoration:none;color:inherit;">
+            <img src="../assets/album-cover-3.jpg" alt="" style="width:44px;height:44px;border-radius:var(--radius-sm,8px);object-fit:cover;flex-shrink:0;" />
+            <div class="flex-1 min-w-0">
+              <p class="truncate" style="font-size:var(--text-body-sm,14px);font-weight:500;color:var(--brand-ink);line-height:var(--text-body-sm-leading,20px);">
+                城市光斑
+              </p>
+              <p class="truncate" style="font-size:var(--text-caption,12px);color:var(--brand-mute);line-height:var(--text-caption-leading,16px);">
+                夜行列车
+              </p>
+            </div>
+            <span style="font-size:var(--text-caption,12px);color:var(--brand-mute);line-height:var(--text-caption-leading,16px);flex-shrink:0;">3:45</span>
+          </a>
+
+          <!-- Divider -->
+          <div style="height:1px;background:var(--brand-line);margin:0 16px;"></div>
+
+          <!-- Track 4 -->
+          <a href="#" class="track-row flex items-center gap-3" style="display:flex;align-items:center;gap:12px;padding:12px 16px;text-decoration:none;color:inherit;">
+            <img src="../assets/album-cover-1.jpg" alt="" style="width:44px;height:44px;border-radius:var(--radius-sm,8px);object-fit:cover;flex-shrink:0;" />
+            <div class="flex-1 min-w-0">
+              <p class="truncate" style="font-size:var(--text-body-sm,14px);font-weight:500;color:var(--brand-ink);line-height:var(--text-body-sm-leading,20px);">
+                雨后清晨
+              </p>
+              <p class="truncate" style="font-size:var(--text-caption,12px);color:var(--brand-mute);line-height:var(--text-caption-leading,16px);">
+                林声
+              </p>
+            </div>
+            <span style="font-size:var(--text-caption,12px);color:var(--brand-mute);line-height:var(--text-caption-leading,16px);flex-shrink:0;">6:08</span>
+          </a>
+
+        </div>
+      </div>
+
+
+      <!-- ===== 5. Section: 我的收藏 ===== -->
+      <div style="margin-top:24px;">
+        <!-- Section header -->
+        <div class="flex items-center gap-2" style="margin-bottom:12px;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="var(--brand-steel)" style="flex-shrink:0;">
+            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+          </svg>
+          <span style="font-size:var(--text-title-md,16px);font-weight:600;color:var(--brand-ink);line-height:var(--text-title-md-leading,22px);flex:1;">
+            我的收藏
+          </span>
+          <span style="font-size:var(--text-caption,12px);font-weight:500;color:var(--brand-steel);line-height:var(--text-caption-leading,16px);background:var(--brand-steel-light);padding:2px 8px;border-radius:var(--radius-full,9999px);">
+            2 首
+          </span>
+        </div>
+
+        <!-- Track list card -->
+        <div style="background:var(--brand-surface);border-radius:var(--radius-lg,16px);border:1px solid var(--brand-line);box-shadow:var(--shadow-sm);overflow:hidden;">
+
+          <!-- Track 1 -->
+          <a href="#" class="track-row flex items-center gap-3" style="display:flex;align-items:center;gap:12px;padding:12px 16px;text-decoration:none;color:inherit;">
+            <img src="../assets/album-cover-2.jpg" alt="" style="width:44px;height:44px;border-radius:var(--radius-sm,8px);object-fit:cover;flex-shrink:0;" />
+            <div class="flex-1 min-w-0">
+              <p class="truncate" style="font-size:var(--text-body-sm,14px);font-weight:500;color:var(--brand-ink);line-height:var(--text-body-sm-leading,20px);">
+                深海回响
+              </p>
+              <p class="truncate" style="font-size:var(--text-caption,12px);color:var(--brand-mute);line-height:var(--text-caption-leading,16px);">
+                潮汐工作室
+              </p>
+            </div>
+            <span style="font-size:var(--text-caption,12px);color:var(--brand-mute);line-height:var(--text-caption-leading,16px);flex-shrink:0;">5:17</span>
+          </a>
+
+          <!-- Divider -->
+          <div style="height:1px;background:var(--brand-line);margin:0 16px;"></div>
+
+          <!-- Track 2 -->
+          <a href="#" class="track-row flex items-center gap-3" style="display:flex;align-items:center;gap:12px;padding:12px 16px;text-decoration:none;color:inherit;">
+            <img src="../assets/album-cover-3.jpg" alt="" style="width:44px;height:44px;border-radius:var(--radius-sm,8px);object-fit:cover;flex-shrink:0;" />
+            <div class="flex-1 min-w-0">
+              <p class="truncate" style="font-size:var(--text-body-sm,14px);font-weight:500;color:var(--brand-ink);line-height:var(--text-body-sm-leading,20px);">
+                城市光斑
+              </p>
+              <p class="truncate" style="font-size:var(--text-caption,12px);color:var(--brand-mute);line-height:var(--text-caption-leading,16px);">
+                夜行列车
+              </p>
+            </div>
+            <span style="font-size:var(--text-caption,12px);color:var(--brand-mute);line-height:var(--text-caption-leading,16px);flex-shrink:0;">3:45</span>
+          </a>
+
+        </div>
+      </div>
+
+
+      <!-- ===== 6. Bottom spacing ===== -->
+      <div style="height:24px;"></div>
+
+    </div><!-- / Safe inset wrapper -->
+  </main>
+
+
+  <!-- ======= Mini Player Bar ======= -->
+  <div class="flex-shrink-0" style="background:var(--brand-surface);border-top:1px solid var(--brand-line);">
+    <!-- progress rail -->
+    <div style="height:2px;background:var(--brand-line);">
+      <div style="width:35%;height:100%;background:var(--brand-steel);border-radius:1px;"></div>
+    </div>
+
+    <!-- clickable row -->
+    <div
+      data-dom-id="mini-expand"
+      class="flex items-center gap-3 px-4 py-2 cursor-pointer select-none"
+    >
+      <!-- album cover -->
+      <img
+        src="../assets/album-cover-1.jpg"
+        alt=""
+        class="flex-shrink-0 object-cover"
+        style="width:40px;height:40px;border-radius:var(--radius-sm,8px);"
+      />
+
+      <!-- track info -->
+      <div class="flex-1 min-w-0">
+        <p class="truncate" style="font-size:var(--text-body-sm,14px);font-weight:600;color:var(--brand-ink);line-height:var(--text-body-sm-leading,20px);">
+          晚风漫步
+        </p>
+        <p class="truncate" style="font-size:var(--text-caption,12px);color:var(--brand-mute);line-height:var(--text-caption-leading,16px);">
+          林声
+        </p>
+      </div>
+
+      <!-- transport controls -->
+      <div class="flex items-center gap-2 flex-shrink-0">
+        <!-- play / pause -->
+        <button
+          class="flex items-center justify-center"
+          style="width:36px;height:36px;border-radius:var(--radius-full,9999px);background:var(--brand-steel);border:none;"
+          aria-label="播放/暂停"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="white">
+            <rect x="6" y="4" width="4" height="16" rx="1"/>
+            <rect x="14" y="4" width="4" height="16" rx="1"/>
+          </svg>
+        </button>
+        <!-- skip next -->
+        <button
+          class="flex items-center justify-center"
+          style="width:32px;height:32px;border:none;background:transparent;"
+          aria-label="下一首"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="var(--brand-mute)">
+            <path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ======= Bottom Navigation Bar ======= -->
+  <nav
+    class="flex-shrink-0 flex items-center justify-around"
+    style="background:var(--brand-surface);border-top:1px solid var(--brand-line);padding:6px 0 env(safe-area-inset-bottom,8px);"
+  >
+
+    <!-- 发现 / Discover -->
+    <a
+      href="discover.html"
+      data-dom-id="tab-discover"
+      class="flex flex-col items-center gap-0.5 flex-1 py-1 no-underline"
+      style="text-decoration:none;"
+    >
+      <span class="tab-icon" style="width:40px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:var(--radius-md,12px);">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
+        </svg>
+      </span>
+      <span class="tab-label" style="font-size:var(--text-label,11px);line-height:var(--text-label-leading,14px);">
+        发现
+      </span>
+    </a>
+
+    <!-- 搜索 / Search -->
+    <a
+      href="search.html"
+      data-dom-id="tab-search"
+      class="flex flex-col items-center gap-0.5 flex-1 py-1 no-underline"
+      style="text-decoration:none;"
+    >
+      <span class="tab-icon" style="width:40px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:var(--radius-md,12px);">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+        </svg>
+      </span>
+      <span class="tab-label" style="font-size:var(--text-label,11px);line-height:var(--text-label-leading,14px);">
+        搜索
+      </span>
+    </a>
+
+    <!-- 我的 / Mine (active) -->
+    <a
+      href="mine.html"
+      data-dom-id="tab-mine"
+      data-active="true"
+      class="flex flex-col items-center gap-0.5 flex-1 py-1 no-underline"
+      style="text-decoration:none;"
+    >
+      <span class="tab-icon" style="width:40px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:var(--radius-md,12px);">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+        </svg>
+      </span>
+      <span class="tab-label" style="font-size:var(--text-label,11px);line-height:var(--text-label-leading,14px);">
+        我的
+      </span>
+    </a>
+
+  </nav>
+
+</div>
+
+
+    <style>
+    /* -- Base reset -- */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; -webkit-text-size-adjust: 100%; }
+    body {
+      font-family: var(--font-body);
+      background: var(--brand-background);
+      color: var(--brand-ink);
+      min-height: 100vh;
+      min-height: 100dvh;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* -- Active tab injection -- */
+    [data-dom-id="tab-discover"] { color: var(--brand-mute) !important; }
+    [data-dom-id="tab-search"]  { color: var(--brand-mute) !important; }
+    [data-dom-id="tab-mine"]    { color: var(--brand-steel) !important; }
+    [data-dom-id="tab-mine"] .tab-icon { background: var(--brand-steel-light) !important; }
+
+    /* -- List row press -- */
+    .track-row {
+      transition: background 120ms ease;
+    }
+    .track-row:active {
+      background: var(--brand-steel-light);
+    }
+    .shortcut-row {
+      transition: background 120ms ease;
+    }
+    .shortcut-row:active {
+      background: var(--brand-steel-light);
+    }
+
+    /* -- Reduced motion -- */
+    @media (prefers-reduced-motion: reduce) {
+      .track-row, .shortcut-row { transition-duration: 0.01ms !important; }
+    }
+  </style>
+</body>
+</html>

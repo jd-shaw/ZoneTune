@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>正在播放 - 听域 ZoneTune</title>
+    <style id="theme-vars">
+:root {
+  /* ── Warm Studio Palette ── */
+  /* Apple Music 克制留白 + 网易云温度感 */
+  --brand-background: #FAFAF8;
+  --brand-surface: #FFFFFF;
+  --brand-ink: #1D1D1F;
+  --brand-mute: #8E8E93;
+  --brand-steel: #E84C3D;
+  --brand-on-steel: #FFFFFF;
+  --brand-line: #F0EDE8;
+  --brand-error: #D63031;
+
+  /* ── Warm Tints ── */
+  --brand-steel-light: #FFF0EE;
+  --brand-steel-mid: #F4A09A;
+  --brand-steel-dark: #C0392B;
+
+  /* ── Semantic State Colors ── */
+  --state-success: #27AE60;
+  --state-warning: #F2994A;
+  --state-error: #D63031;
+  --state-info: #5BA4CF;
+
+  /* ── Typography ── */
+  --font-display: 'Fraunces', 'Noto Serif SC', Georgia, serif;
+  --font-body: 'Figtree', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
+  --text-display: 40px;
+  --text-display-leading: 46px;
+  --text-display-tracking: -0.5px;
+
+  --text-headline: 28px;
+  --text-headline-leading: 34px;
+
+  --text-title-lg: 22px;
+  --text-title-lg-leading: 28px;
+
+  --text-title-md: 16px;
+  --text-title-md-leading: 22px;
+
+  --text-body: 16px;
+  --text-body-leading: 24px;
+
+  --text-body-sm: 14px;
+  --text-body-sm-leading: 20px;
+
+  --text-caption: 12px;
+  --text-caption-leading: 16px;
+
+  --text-label: 11px;
+  --text-label-leading: 14px;
+
+  /* ── Shape System ── */
+  --radius-xs: 6px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-full: 9999px;
+
+  /* ── Spacing ── */
+  --space-unit: 4px;
+
+  /* ── Surface Depth ── */
+  --shadow-sm: 0 1px 3px rgba(29, 29, 31, 0.04);
+  --shadow-md: 0 2px 12px rgba(29, 29, 31, 0.06);
+  --shadow-lg: 0 8px 30px rgba(29, 29, 31, 0.08);
+}
+
+/* Dark Mode */
+.dark {
+  --brand-background: #0D0D0F;
+  --brand-surface: #1C1C1E;
+  --brand-ink: #F5F5F7;
+  --brand-mute: #98989D;
+  --brand-steel: #FF6B5E;
+  --brand-line: #2C2C2E;
+
+  --brand-steel-light: #2D1515;
+  --brand-steel-mid: #FF9B93;
+  --brand-steel-dark: #8B2020;
+}
+
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.1/dist/index.global.js"></script>
+    <script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+    <style type="text/tailwindcss">
+  @theme inline {
+    --color-background: var(--brand-background);
+  }
+  @layer base {
+    body { background: var(--brand-background); color: var(--brand-foreground); }
+    td, th { @apply break-words; word-break: break-all; word-break: auto-phrase; }
+    th { @apply whitespace-nowrap; }
+  }
+    </style>
+    <style>
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      [data-icon] {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        -webkit-mask-size: contain;
+        mask-size: contain;
+        -webkit-mask-repeat: no-repeat;
+        mask-repeat: no-repeat;
+        -webkit-mask-position: center;
+        mask-position: center;
+        background-color: currentColor;
+      }
+    </style>
+</head>
+<body>
+
+<div class="now-playing" data-page="now-playing" data-node-id="page-now-playing">
+
+  <!-- ═══ Top Bar ═══ -->
+  <div class="top-bar">
+    <button data-dom-id="back-discover" aria-label="返回发现页">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="6 9 12 15 18 9"/>
+      </svg>
+    </button>
+    <span class="brand-mark">听域 ZoneTune</span>
+    <button aria-label="播放队列">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="8" y1="6" x2="21" y2="6"/>
+        <line x1="8" y1="12" x2="21" y2="12"/>
+        <line x1="8" y1="18" x2="21" y2="18"/>
+        <line x1="3" y1="6" x2="3.01" y2="6"/>
+        <line x1="3" y1="12" x2="3.01" y2="12"/>
+        <line x1="3" y1="18" x2="3.01" y2="18"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- ═══ Album Art ═══ -->
+  <div class="album-art-area">
+    <div class="album-cover">
+      <img src="../assets/album-cover-1.jpg" alt="深海回响 专辑封面"/>
+    </div>
+  </div>
+
+  <!-- ═══ Track Info ═══ -->
+  <div class="track-info">
+    <p class="track-title">深海回响</p>
+    <p class="track-artist">声波工作室</p>
+  </div>
+
+  <!-- ═══ Progress Slider ═══ -->
+  <div class="progress-section">
+    <div class="progress-track" role="slider" aria-label="播放进度" aria-valuemin="0" aria-valuemax="296" aria-valuenow="83" aria-valuetext="1分23秒 / 4分56秒">
+      <div class="progress-fill"></div>
+      <div class="progress-thumb"></div>
+    </div>
+    <div class="progress-times">
+      <span>1:23</span>
+      <span>4:56</span>
+    </div>
+  </div>
+
+  <!-- ═══ Control Row ═══ -->
+  <div class="controls">
+    <!-- Repeat Mode -->
+    <button class="ctrl-small" aria-label="顺序播放">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="17 1 21 5 17 9"/>
+        <path d="M3 11V9a4 4 0 0 1 4-4h14"/>
+        <polyline points="7 23 3 19 7 15"/>
+        <path d="M21 13v2a4 4 0 0 1-4 4H3"/>
+      </svg>
+    </button>
+
+    <!-- Skip Previous -->
+    <button class="ctrl-skip" aria-label="上一首">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M6 6h2v12H6V6zm3.5 6l8.5 6V6l-8.5 6z"/>
+      </svg>
+    </button>
+
+    <!-- Play/Pause (Hero) -->
+    <button class="ctrl-play" aria-label="播放">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
+        <polygon points="6 3 20 12 6 21 6 3"/>
+      </svg>
+    </button>
+
+    <!-- Skip Next -->
+    <button class="ctrl-skip" aria-label="下一首">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/>
+      </svg>
+    </button>
+
+    <!-- Favorite -->
+    <button class="ctrl-small" aria-label="收藏">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- ═══ Status Text ═══ -->
+  <div class="status-text">顺序 &middot; 队列 3 首</div>
+
+</div>
+
+
+    <style>
+    /* ── Reset & Base ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; overflow: hidden; }
+    body {
+      font-family: var(--font-body);
+      color: var(--brand-ink);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* ── Full-Screen Container ── */
+    .now-playing {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      height: 100dvh;
+      max-width: 430px;
+      margin: 0 auto;
+      position: relative;
+      /* Atmospheric gradient: steel-teal 10% at top fading to background */
+      background:
+        linear-gradient(
+          180deg,
+          rgba(232, 76, 61, 0.10) 0%,
+          var(--brand-background) 60%
+        ),
+        var(--brand-background);
+    }
+
+    /* ── Top Bar ── */
+    .top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 20px 0 20px;
+      flex-shrink: 0;
+      padding-top: calc(env(safe-area-inset-top, 12px) + 12px);
+    }
+    .top-bar button {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      border-radius: var(--radius-md, 12px);
+      color: var(--brand-ink);
+      transition: background-color 150ms cubic-bezier(.2,.8,.2,1);
+    }
+    .top-bar button:hover { background: var(--brand-surface); }
+    .top-bar button:active { transform: scale(0.95); }
+    .top-bar button:focus-visible {
+      outline: 2px solid var(--brand-steel);
+      outline-offset: 2px;
+    }
+    .brand-mark {
+      font-family: var(--font-display);
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--brand-ink);
+      letter-spacing: -0.01em;
+      text-align: center;
+      line-height: 1.3;
+    }
+
+    /* ── Album Art Area (flex-weight to fill space) ── */
+    .album-art-area {
+      flex: 1 1 0%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px 40px;
+      min-height: 0;
+    }
+    .album-cover {
+      width: 100%;
+      max-width: 320px;
+      aspect-ratio: 1 / 1;
+      border-radius: var(--radius-lg, 16px);
+      overflow: hidden;
+      box-shadow: 0 8px 32px rgba(28, 31, 38, 0.05);
+      position: relative;
+      background: var(--brand-surface);
+    }
+    .album-cover img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      alt: "深海回响 专辑封面";
+    }
+    /* Fallback when no image */
+    .album-cover .placeholder {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(
+        135deg,
+        var(--brand-steel-light) 0%,
+        var(--brand-surface) 100%
+      );
+    }
+    .album-cover .placeholder svg {
+      opacity: 0.35;
+    }
+
+    /* ── Track Info ── */
+    .track-info {
+      flex-shrink: 0;
+      text-align: center;
+      padding: 0 40px;
+    }
+    .track-title {
+      font-family: var(--font-display);
+      font-size: 24px;
+      font-weight: 600;
+      color: var(--brand-ink);
+      line-height: 1.2;
+      letter-spacing: -0.02em;
+      text-wrap: balance;
+      word-break: keep-all;
+      overflow-wrap: break-word;
+    }
+    .track-artist {
+      font-family: var(--font-body);
+      font-size: 16px;
+      font-weight: 400;
+      color: var(--brand-mute);
+      line-height: 1.5;
+      margin-top: 4px;
+    }
+
+    /* ── Progress Slider ── */
+    .progress-section {
+      flex-shrink: 0;
+      padding: 20px 40px 0 40px;
+    }
+    .progress-track {
+      width: 100%;
+      height: 4px;
+      background: var(--brand-line);
+      border-radius: 2px;
+      position: relative;
+      cursor: pointer;
+      touch-action: none;
+    }
+    .progress-fill {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 28%;
+      height: 100%;
+      background: var(--brand-steel);
+      border-radius: 2px;
+      transition: width 120ms linear;
+    }
+    .progress-thumb {
+      position: absolute;
+      top: 50%;
+      left: 28%;
+      width: 14px;
+      height: 14px;
+      background: var(--brand-steel);
+      border: 2px solid var(--brand-surface);
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      box-shadow: 0 1px 4px rgba(28, 31, 38, 0.12);
+      transition: transform 120ms cubic-bezier(.2,.8,.2,1);
+    }
+    .progress-track:active .progress-thumb {
+      transform: translate(-50%, -50%) scale(1.2);
+    }
+    .progress-times {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 8px;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--brand-mute);
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* ── Control Row ── */
+    .controls {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      padding: 20px 40px 8px 40px;
+    }
+    .controls button {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      color: var(--brand-mute);
+      transition: color 150ms cubic-bezier(.2,.8,.2,1), transform 120ms cubic-bezier(.3,0,0,1);
+      -webkit-tap-highlight-color: transparent;
+    }
+    .controls button:active { transform: scale(0.9); }
+    .controls button:focus-visible {
+      outline: 2px solid var(--brand-steel);
+      outline-offset: 2px;
+      border-radius: 50%;
+    }
+    /* Mode / Favorite: 28px tap area + icon */
+    .ctrl-small {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+    }
+    /* Skip: 36px */
+    .ctrl-skip {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+    }
+    /* Play/Pause Hero Button */
+    .ctrl-play {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      background: var(--brand-steel);
+      color: var(--brand-surface, #FFFFFF) !important;
+      box-shadow: 0 4px 16px rgba(232, 76, 61, 0.25);
+      transition:
+        background 150ms cubic-bezier(.2,.8,.2,1),
+        transform 120ms cubic-bezier(.3,0,0,1),
+        box-shadow 150ms cubic-bezier(.2,.8,.2,1);
+    }
+    .ctrl-play:hover {
+      background: var(--brand-steel-mid, #F4A09A);
+      box-shadow: 0 6px 20px rgba(232, 76, 61, 0.3);
+    }
+    .ctrl-play:active {
+      transform: scale(0.93);
+    }
+    .ctrl-play:focus-visible {
+      outline: 2px solid var(--brand-ink);
+      outline-offset: 4px;
+    }
+
+    /* ── Status Text ── */
+    .status-text {
+      flex-shrink: 0;
+      text-align: center;
+      padding: 8px 40px calc(env(safe-area-inset-bottom, 16px) + 12px) 40px;
+      font-size: 13px;
+      font-weight: 400;
+      color: var(--brand-mute);
+      line-height: 1.5;
+    }
+
+    /* ── Motion: Reduced ── */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        transition-duration: 0.01ms !important;
+        animation-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</body>
+</html>

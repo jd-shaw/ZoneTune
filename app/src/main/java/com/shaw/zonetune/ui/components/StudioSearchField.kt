@@ -18,6 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.ImeAction
 import com.shaw.zonetune.ui.theme.SearchFieldShape
 
@@ -88,10 +89,10 @@ fun StudioSearchField(
             onGo = { submit() },
         ),
         colors = OutlinedTextFieldDefaults.colors(
-            focusedContainerColor = MaterialTheme.colorScheme.surface,
-            unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-            focusedBorderColor = MaterialTheme.colorScheme.primary,
-            unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+            focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+            focusedBorderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.35f),
+            unfocusedBorderColor = Color.Transparent,
             cursorColor = MaterialTheme.colorScheme.primary,
             focusedTextColor = MaterialTheme.colorScheme.onSurface,
             unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
